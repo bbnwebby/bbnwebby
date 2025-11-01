@@ -1,6 +1,6 @@
 // lib/supabaseHelpers.ts
 import { supabase } from "@/lib/supabaseClient"
-import * as types from "@/lib/certificate_and_id/types"
+import * as types from "@/types/types"
 
 
 
@@ -119,4 +119,111 @@ export const createOrUpdateUserProfile = async (
   console.log("[createOrUpdateUserProfile] Profile upserted:", data);
   return data as types.UserProfile;
 };
+
+
+// =======================================
+// Makeup Artist Functions
+// =======================================
+
+
+/**
+ * 🟢 Creates a new makeup artist and their linked user profile.
+ *
+ * 💬 Logic:
+ *  1️⃣ Fetches or creates the logged-in user’s profile using `createOrUpdateUserProfile`.
+ *  2️⃣ Inserts a new record into the `makeup_artists` table using that `user_profile_id`.
+ *  3️⃣ Returns the complete artist record (with related profile fields).
+ *
+ * ⚙️ Parameters:
+ *  - `artistData: Omit<MakeupArtist, "id" | "user_profile_id" | "created_at" | "updated_at">`
+ *    → All artist fields except those auto-managed by Supabase.
+ *
+ * 📤 Returns: `Promise<{ artist: MakeupArtist; profile: UserProfile } | null>`
+ */
+export const createMakeupArtist = async (
+  artistData: Omit<types.MakeupArtist, "id" | "user_profile_id" | "created_at" | "updated_at">
+): Promise<{ artist: types.MakeupArtist; profile: types.UserProfile } | null> => {
+  console.log("[createMakeupArtist] Starting artist creation...");
+
+  // Step 1️⃣: Get or create the user profile
+  const profile = await getUserProfile();
+
+  let userProfile: types.UserProfile | null = profile;
+
+  if (!userProfile) {
+    console.log("[createMakeupArtist] No user profile found — creating new one.");
+    userProfile = await createOrUpdateUserProfile({
+      full_name: artistData.username, // Default to username if full name not yet set
+      password_hash: "TEMPORARY_HASH", // Replace with real hash logic if custom auth
+    });
+
+    if (!userProfile) {
+      console.error("[createMakeupArtist] Failed to create user profile.");
+      return null;
+    }
+  }
+
+  console.log("[createMakeupArtist] Using user_profile_id:", userProfile.id);
+
+  // Step 2️⃣: Create the makeup artist record
+  const { data: newArtist, error: artistError } = await supabase
+    .from("makeup_artists")
+    .insert([
+      {
+        ...artistData,
+        user_profile_id: userProfile.id,
+      },
+    ])
+    .select()
+    .single();
+
+  if (artistError) {
+    console.error("[createMakeupArtist] Error creating artist:", artistError.message);
+    return null;
+  }
+
+  console.log("[createMakeupArtist] Artist created successfully:", newArtist);
+
+  // Step 3️⃣: Return both profile + artist for convenience
+  return {
+    artist: newArtist as types.MakeupArtist,
+    profile: userProfile,
+  };
+};
+
+
+// Fetch profile by auth user id
+
+
+// Fetch makeup artist by profile id
+export async function getMakeupArtistByProfile(profileId: string) {
+  const { data, error } = await supabase
+    .from('makeup_artists')
+    .select('*')
+    .eq('user_profile_id', profileId)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('getMakeupArtistByProfile error:', error)
+  }
+
+  return data ?? null
+}
+
+// Create new user profile
+export async function createUserProfile(
+  profileData: Omit<types.UserProfile, 'id' | 'created_at' | 'updated_at'>
+) {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .insert(profileData)
+    .select('*')
+    .single()
+
+  if (error) {
+    console.error('createUserProfile error:', error)
+    return null
+  }
+  return data
+}
 

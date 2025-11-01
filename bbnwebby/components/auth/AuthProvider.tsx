@@ -1,16 +1,30 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabaseClient'
-import { getUserProfile } from '@/lib/supabaseHelpers'
-import {UserProfile} from "@/lib/certificate_and_id/types"
-// --------------------
-// Types
-// --------------------
-type AuthContextType = {
+import type { UserProfile, MakeupArtist } from '@/types/types'
+import {
+  getUserProfile,
+  getMakeupArtistByProfile,
+  createUserProfile,
+  createMakeupArtist,
+} from '@/lib/supabaseHelpers'
+
+// =======================================
+// 🔒 Auth Context Type Definition
+// =======================================
+interface AuthContextType {
   user: User | null
   profile: UserProfile | null
+  makeupArtist: MakeupArtist | null
   loading: boolean
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
@@ -18,21 +32,27 @@ type AuthContextType = {
     email: string
     password: string
     fullName: string
-    number: string
-    instaId?: string | null
+    whatsappNumber?: string | null
+    city?: string | null
+    locationUrl?: string | null
+    profilePhotoUrl?: string | null
+    passwordHash: string
+    isMakeupArtist?: boolean
+    artistUsername?: string | null
     organisation?: string | null
-    age?: number | null
-    gender?: string | null
+    designation?: string | null
+    instagramHandle?: string | null
   }) => Promise<{ error?: string }>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error?: string }>
 }
 
-// --------------------
-// Context
-// --------------------
+// =======================================
+// 🧱 Default Context Value
+// =======================================
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
+  makeupArtist: null,
   loading: true,
   logout: async () => {},
   refreshSession: async () => {},
@@ -40,48 +60,63 @@ const AuthContext = createContext<AuthContextType>({
   updateProfile: async () => ({ error: 'Not implemented' }),
 })
 
-// --------------------
-// Provider
-// --------------------
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+// =======================================
+// 🧩 AuthProvider Component
+// =======================================
+export function AuthProvider({ children }: { children: ReactNode }) {
+  // ---------- States ----------
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loadingUser, setLoadingUser] = useState(true)
-  const [loadingProfile, setLoadingProfile] = useState(true)
-  const loading = loadingUser || loadingProfile
+  const [makeupArtist, setMakeupArtist] = useState<MakeupArtist | null>(null)
+  const [loadingUser, setLoadingUser] = useState<boolean>(true)
+  const [loadingProfile, setLoadingProfile] = useState<boolean>(true)
 
-  // Clear auth state
-  const clearAuth = () => {
+  // Combine loading states for a single flag
+  const loading: boolean = loadingUser || loadingProfile
+
+  /**
+   * ✅ Clears all authentication and profile state
+   */
+  const clearAuth = (): void => {
     setUser(null)
     setProfile(null)
+    setMakeupArtist(null)
   }
 
-  // Load user session and profile
-  const loadSession = useCallback(async () => {
+  /**
+   * 🔁 Loads user session, profile, and artist data
+   */
+  const loadSession = useCallback(async (): Promise<void> => {
     setLoadingUser(true)
     setLoadingProfile(true)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data, error } = await supabase.auth.getSession()
+      if (error) throw error
 
-      if (!session?.user) {
-        console.log('[AuthProvider] ❌ Invalid or missing session, clearing')
+      const sessionUser = data?.session?.user ?? null
+      if (!sessionUser) {
+        console.warn('[AuthProvider] ❌ No active session found.')
         clearAuth()
         return
       }
 
-      console.log('[AuthProvider] ✅ Valid session, user:', session.user)
-      setUser(session.user)
+      console.log('[AuthProvider] ✅ Session user loaded:', sessionUser.id)
+      setUser(sessionUser)
 
-      try {
-        const p = await getUserProfile()
-        setProfile(p)
-      } catch (err) {
-        console.error('[AuthProvider] ❌ Failed to fetch profile:', err)
-        setProfile(null)
+      // ✅ Fetch user profile by Supabase auth user ID
+      const userProfile = await getUserProfile()
+      setProfile(userProfile)
+
+      // ✅ If profile exists, load linked artist data
+      if (userProfile) {
+        const artistData = await getMakeupArtistByProfile(userProfile.id)
+        setMakeupArtist(artistData)
+      } else {
+        setMakeupArtist(null)
       }
     } catch (err) {
-      console.error('[AuthProvider] ❌ getSession error:', err)
+      console.error('[AuthProvider] ❌ Failed to load session:', err)
       clearAuth()
     } finally {
       setLoadingUser(false)
@@ -89,112 +124,193 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Listen to auth state changes
+  /**
+   * 👂 Listen for Supabase auth state changes
+   * - Automatically updates user & profile when login/logout occurs.
+   */
   useEffect(() => {
-    loadSession() // run on mount
+    loadSession()
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!session?.user) {
-          console.log('[AuthProvider:onAuthStateChange] ❌ Invalid session → clear')
-          clearAuth()
-          setLoadingUser(false)
-          setLoadingProfile(false)
-          return
-        }
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const sessionUser = session?.user ?? null
 
-        console.log('[AuthProvider:onAuthStateChange] ✅ User updated:', session.user)
-        setUser(session.user)
-
-        try {
-          const p = await getUserProfile()
-          setProfile(p)
-        } catch (err) {
-          console.error('[AuthProvider:onAuthStateChange] ❌ Failed profile fetch:', err)
-          setProfile(null)
-        } finally {
-          setLoadingProfile(false)
-        }
+      if (!sessionUser) {
+        console.log('[AuthProvider:onAuthChange] ❌ User signed out.')
+        clearAuth()
+        setLoadingUser(false)
+        setLoadingProfile(false)
+        return
       }
-    )
 
-    return () => subscription.subscription.unsubscribe()
+      console.log('[AuthProvider:onAuthChange] ✅ Auth user:', sessionUser.id)
+      setUser(sessionUser)
+
+      try {
+        const fetchedProfile = await getUserProfile()
+        setProfile(fetchedProfile)
+
+        if (fetchedProfile) {
+          const artist = await getMakeupArtistByProfile(fetchedProfile.id)
+          setMakeupArtist(artist)
+        } else {
+          setMakeupArtist(null)
+        }
+      } catch (err) {
+        console.error('[AuthProvider:onAuthChange] ❌ Error loading profile/artist:', err)
+        setProfile(null)
+        setMakeupArtist(null)
+      } finally {
+        setLoadingProfile(false)
+      }
+    })
+
+    return () => {
+      listener?.subscription?.unsubscribe()
+    }
   }, [loadSession])
 
-  // Logout function
-  const logout = async () => {
-    await supabase.auth.signOut()
-    clearAuth()
+  /**
+   * 🚪 Logs out the current user
+   */
+  const logout = async (): Promise<void> => {
+    try {
+      await supabase.auth.signOut()
+      clearAuth()
+      console.log('[AuthProvider] ✅ Logged out successfully.')
+    } catch (err) {
+      console.error('[AuthProvider] ❌ Logout failed:', err)
+    }
   }
 
-  // Refresh session
-  const refreshSession = async () => {
+  /**
+   * 🔄 Refreshes the current Supabase session and user data
+   */
+  const refreshSession = async (): Promise<void> => {
     await loadSession()
   }
 
-  // Sign-up new user
-  const signUp: AuthContextType['signUp'] = async ({
-    email, password, fullName, number, instaId, organisation, age, gender,
-  }) => {
+  /**
+   * 🧍 Handles sign-up flow: Auth → Profile → Optional Artist
+   */
+  const signUp: AuthContextType['signUp'] = async (data) => {
+    const {
+      email,
+      password,
+      fullName,
+      whatsappNumber,
+      city,
+      locationUrl,
+      profilePhotoUrl,
+      passwordHash,
+      isMakeupArtist,
+      artistUsername,
+      organisation,
+      designation,
+      instagramHandle,
+    } = data
+
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // Step 1️⃣: Create Supabase Auth account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: fullName } },
       })
-      if (error) return { error: error.message }
+      if (authError) throw new Error(authError.message)
 
-      const newUser = data.user ?? data.session?.user
-      if (!newUser) return { error: 'Sign-up failed: no user' }
+      const newUser = authData.user ?? authData.session?.user
+      if (!newUser) throw new Error('Sign-up failed: No user returned from Supabase.')
 
-      await supabase.from('user_profiles').insert({
-        id: newUser.id,
+      // Step 2️⃣: Create user profile
+      const newProfile = await createUserProfile({
+        auth_user_id: newUser.id,
         full_name: fullName,
-        number,
-        insta_id: instaId || null,
-        organisation: organisation || null,
-        age,
-        gender: gender || null,
+        whatsapp_number: whatsappNumber ?? null,
+        password_hash: passwordHash,
+        profile_photo_url: profilePhotoUrl ?? null,
+        location_url: locationUrl ?? null,
+        city: city ?? null,
       })
 
+      if (!newProfile) throw new Error('Failed to create user profile.')
+
       setUser(newUser)
-      const p = await getUserProfile()
-      setProfile(p)
+      setProfile(newProfile)
+
+      // Step 3️⃣: Optionally create a makeup artist record
+      if (isMakeupArtist && artistUsername) {
+        const artistRecord = await createMakeupArtist({
+          username: artistUsername,
+          organisation: organisation ?? null,
+          designation: designation ?? null,
+          instagram_handle: instagramHandle ?? null,
+          portfolio_url: null,
+          status: 'pending',
+          portfolio_pdf_url: null,
+        })
+
+        if (artistRecord) {
+          console.log('[AuthProvider] ✅ Makeup artist profile created.')
+          setMakeupArtist(artistRecord.artist)
+        }
+      }
 
       return {}
     } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Sign-up failed' }
+      console.error('[AuthProvider:signUp] ❌ Error during sign-up:', err)
+      const msg = err instanceof Error ? err.message : 'Unknown sign-up failure.'
+      return { error: msg }
     }
   }
 
-  // Update user profile
+  /**
+   * 🧾 Updates profile information in Supabase
+   */
   const updateProfile: AuthContextType['updateProfile'] = async (updates) => {
-    if (!user) return { error: 'Not signed in' }
+    if (!profile) return { error: 'No active profile found.' }
 
     try {
       const { error } = await supabase
         .from('user_profiles')
         .update(updates)
-        .eq('id', user.id)
+        .eq('id', profile.id)
 
-      if (error) return { error: error.message }
+      if (error) throw new Error(error.message)
 
-      const p = await getUserProfile()
-      setProfile(p)
+      const refreshedProfile = await getUserProfile()
+      setProfile(refreshedProfile)
+      console.log('[AuthProvider] ✅ Profile updated successfully.')
       return {}
     } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Update failed' }
+      console.error('[AuthProvider:updateProfile] ❌ Failed:', err)
+      const msg = err instanceof Error ? err.message : 'Unknown update failure.'
+      return { error: msg }
     }
   }
 
+  // =======================================
+  // 🎯 Return Context Provider
+  // =======================================
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, logout, refreshSession, signUp, updateProfile }}
+      value={{
+        user,
+        profile,
+        makeupArtist,
+        loading,
+        logout,
+        refreshSession,
+        signUp,
+        updateProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>
   )
 }
 
-// Hook to use auth context
-export const useAuth = () => useContext(AuthContext)
+// =======================================
+// ⚡ Hook: useAuth()
+// Provides easy access to Auth context
+// =======================================
+export const useAuth = (): AuthContextType => useContext(AuthContext)

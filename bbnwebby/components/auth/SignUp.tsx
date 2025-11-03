@@ -77,10 +77,12 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
       // 2️⃣ Create Supabase Auth user
       console.log('👤 Creating Supabase Auth user...');
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName } },
-      });
+  email,
+  password,
+  options: {
+    emailRedirectTo: `${window.location.origin}/auth/callback`, // 👈 important
+  },
+});
 
       if (authError) {
         console.error('❌ Auth creation failed:', authError.message);

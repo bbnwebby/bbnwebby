@@ -163,7 +163,7 @@ const Navbar: React.FC = () => {
               </ul>
             </div>
 
-            {/* Hamburger Icon */}
+            {/* Hamburger */}
             <button
               onClick={() => setIsMenuOpen((prev) => !prev)}
               className="lg:hidden flex items-center justify-center w-10 h-10 rounded-md hover:bg-pink-100 text-gray-800 transition-all duration-300"
@@ -179,7 +179,63 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Keep your fullscreen mobile menu as-is */}
+      {/* Fullscreen Mobile Menu */}
+      <div
+        className={`lg:hidden fixed inset-0 z-40 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isMenuOpen
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 -translate-y-8 pointer-events-none"
+        }`}
+      >
+        {/* Glassmorphic BG */}
+        <div
+          className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+            isMenuOpen
+              ? "bg-[rgba(255,182,193,0.35)] backdrop-blur-2xl backdrop-saturate-150 opacity-100"
+              : "bg-[rgba(255,182,193,0.1)] backdrop-blur-none opacity-0"
+          } border-t border-[rgba(255,255,255,0.25)] shadow-2xl`}
+        ></div>
+
+        {/* Menu Links */}
+        <div className="relative flex flex-col justify-center items-center h-full px-8 space-y-14 text-center">
+          {[
+            { href: "#home", label: "Home" },
+            { href: "#services", label: "Services" },
+            { href: "#artists", label: "Artists" },
+            { href: "#about", label: "About" },
+            { href: "#contact", label: "Contact" },
+            { href: "#join", label: "Join as an Artist" },
+          ].map((item, index) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setIsMenuOpen(false)}
+              className={`relative text-[1.5rem] font-semibold tracking-wide text-gray-800 hover:text-pink-600 transition-all duration-700 ease-out group transform ${
+                isMenuOpen
+                  ? `opacity-100 translate-y-0 delay-[${index * 120}ms]`
+                  : "opacity-0 translate-y-6"
+              }`}
+            >
+              {item.label}
+              <span className="absolute left-1/2 -bottom-1 w-0 h-[2px] bg-pink-400 transition-all duration-500 ease-out group-hover:w-3/4 group-hover:left-1/8"></span>
+            </Link>
+          ))}
+
+          {/* Book Now */}
+          <button className="mt-16 px-10 py-3 text-lg font-medium rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-lg hover:shadow-pink-200/70 hover:scale-105 transition-all duration-500 ease-out">
+            Book Now
+          </button>
+
+          {/* Close Button */}
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="absolute bottom-10 flex items-center justify-center w-12 h-12 rounded-full bg-[rgba(255,255,255,0.3)] backdrop-blur-md hover:bg-[rgba(255,255,255,0.5)] transition-all duration-700 shadow-md"
+            aria-label="Close menu"
+          >
+            <X className="w-6 h-6 text-gray-800" />
+          </button>
+        </div>
+      </div>
     </nav>
   );
 };

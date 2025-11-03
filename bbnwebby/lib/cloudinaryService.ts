@@ -1,21 +1,20 @@
 /**
  * CloudinaryService handles direct client-side uploads (image/PDF) to Cloudinary.
- * It automatically detects file type and uploads directly using Cloudinary’s unsigned upload endpoint.
- * Images go to the image endpoint, PDFs go to the raw endpoint for correct MIME handling.
+ * It automatically detects file type and uploads directly using Cloudinary's unsigned upload endpoint.
+ * PDFs are uploaded as 'image' type to support transformations and JPG conversion.
  */
 
 export class CloudinaryService {
   /**
    * Uploads an image or PDF directly to Cloudinary (no API routes).
+   * For PDFs, returns the download URL with fl_attachment transformation.
    * @param file File selected by the user
    * @param folder Cloudinary folder path (e.g., "user_uploads/profile_photos")
-   * @param viewMode 'inline' (default) for browser preview or 'download' for forced download
-   * @returns The uploaded file’s Cloudinary secure URL
+   * @returns The uploaded file's URL (for PDFs, returns download URL)
    */
   static async upload(
     file: File,
-    folder: string,
-    viewMode: 'inline' | 'download' = 'inline'
+    folder: string
   ): Promise<string> {
     console.log('[CloudinaryService] 📁 Starting upload process...');
     console.log(`[CloudinaryService] File name: ${file.name}`);
@@ -42,7 +41,8 @@ export class CloudinaryService {
     if (!cloudName) throw new Error('Missing NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME');
 
     // ================== SELECT ENDPOINT ==================
-    const resourceType = isPDF ? 'raw' : 'image';
+    // Note: PDFs must be uploaded as 'image' type to support JPG conversion
+    const resourceType = 'image';
     const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 
     console.log(`[CloudinaryService] 🌐 Using Cloudinary endpoint: ${uploadUrl}`);
@@ -55,8 +55,6 @@ export class CloudinaryService {
 
     const data: {
       secure_url?: string;
-      public_id?: string;
-      version?: string | number;
       error?: { message: string };
     } = await response.json();
 
@@ -67,21 +65,21 @@ export class CloudinaryService {
 
     console.log('[CloudinaryService] ✅ File uploaded successfully:', data.secure_url);
 
-    // ================== NORMALIZE PDF URL ==================
-    let finalUrl = data.secure_url;
-
+    // ================== HANDLE PDF URLS ==================
     if (isPDF) {
-      const deliveryType = viewMode === 'download' ? 'fl_attachment' : 'fl_inline';
-      const baseUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/${deliveryType}`;
-      if (data.public_id && data.version) {
-        finalUrl = `${baseUrl}/v${data.version}/${data.public_id}.pdf`;
-      } else if (!finalUrl.endsWith('.pdf')) {
-        finalUrl += '.pdf';
-      }
-      console.log(`[CloudinaryService] 📄 PDF ${viewMode} URL:`, finalUrl);
+      const baseUrl = data.secure_url;
+      
+      // Download URL: Add fl_attachment to force download when clicked
+      const downloadUrl = baseUrl.replace('/upload/', '/upload/fl_attachment/');
+      
+      console.log(`[CloudinaryService] 📄 PDF uploaded as:`, baseUrl);
+      console.log(`[CloudinaryService] 📥 PDF Download URL:`, downloadUrl);
+      
+      return downloadUrl;
     }
 
-    return finalUrl;
+    // For images, return the URL directly
+    return data.secure_url;
   }
 
   /**
@@ -89,18 +87,16 @@ export class CloudinaryService {
    * @param canvas HTMLCanvasElement
    * @param filename Desired output filename (e.g., "badge.png")
    * @param folder Cloudinary folder path
-   * @param viewMode 'inline' | 'download'
    */
   static async uploadCanvas(
     canvas: HTMLCanvasElement,
     filename: string,
-    folder: string,
-    viewMode: 'inline' | 'download' = 'inline'
+    folder: string
   ): Promise<string> {
     console.log('[CloudinaryService] 🖌️ Converting canvas to File...');
     const file = await this.canvasToFile(canvas, filename);
     console.log('[CloudinaryService] ✅ Canvas converted to File:', file.name);
-    return this.upload(file, folder, viewMode);
+    return this.upload(file, folder);
   }
 
   /**

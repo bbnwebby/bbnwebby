@@ -31,9 +31,9 @@ export interface MakeupArtist {
   designation?: string | null; // Role or title
   instagram_handle?: string | null; // Instagram username
   username: string; // Display username (unique within app)
-  portfolio_url?: string | null; // Portfolio webpage URL
   status?: "pending" | "approved" | "rejected" | null; // Artist status (enum)
   portfolio_pdf_url?: string | null; // PDF portfolio link
+  logo_url?: string | null
   created_at?: string | null; // Record creation timestamp
   updated_at?: string | null; // Record last update timestamp
 }

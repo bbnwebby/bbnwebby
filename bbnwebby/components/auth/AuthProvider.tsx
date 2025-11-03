@@ -244,9 +244,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           organisation: organisation ?? null,
           designation: designation ?? null,
           instagram_handle: instagramHandle ?? null,
-          portfolio_url: null,
-          status: 'pending',
           portfolio_pdf_url: null,
+          status: 'pending',
         })
 
         if (artistRecord) {

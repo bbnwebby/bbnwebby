@@ -106,7 +106,6 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
           auth_user_id: user.id,
           full_name: fullName,
           whatsapp_number: whatsappNumber || null,
-          password_hash: password, // TODO: Replace with hash later
           city: city || null,
           profile_photo_url: uploaded.profileImageUrl || null,
         },

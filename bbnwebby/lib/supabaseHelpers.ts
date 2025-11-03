@@ -33,8 +33,7 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
 
   const { data: profile, error: profileError } = await supabase
     .from("user_profiles")
-    // selecting all expet for password hash
-    .select("id, auth_user_id, full_name, whatsapp_number, profile_photo_url, location_url, city, created_at, updated_at")
+    .select("*")
     .eq("auth_user_id", user.id)
     .maybeSingle()
 
@@ -140,7 +139,6 @@ export const createMakeupArtist = async (
     console.log("[createMakeupArtist] 🧱 No profile found — creating new one.")
     userProfile = await createOrUpdateUserProfile({
       full_name: artistData.username,
-      password_hash: "TEMP_HASH", // Replace with your real hash logic if using custom auth
     })
   }
 

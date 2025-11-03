@@ -36,7 +36,6 @@ interface AuthContextType {
     city?: string | null
     locationUrl?: string | null
     profilePhotoUrl?: string | null
-    passwordHash: string
     isMakeupArtist?: boolean
     artistUsername?: string | null
     organisation?: string | null
@@ -234,7 +233,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         auth_user_id: newUser.id,
         full_name: data.fullName,
         whatsapp_number: data.whatsappNumber ?? null,
-        password_hash: data.passwordHash,
         profile_photo_url: data.profilePhotoUrl ?? null,
         location_url: data.locationUrl ?? null,
         city: data.city ?? null,

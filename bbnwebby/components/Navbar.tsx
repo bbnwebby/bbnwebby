@@ -7,7 +7,6 @@ import {
   User,
   LogOut,
   Settings,
-  LayoutDashboard,
   LogIn,
 } from "lucide-react";
 import Link from "next/link";

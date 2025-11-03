@@ -12,7 +12,6 @@ export interface UserProfile {
   auth_user_id: string; // FK to Supabase auth.users.id
   full_name: string; // User's full name
   whatsapp_number?: string | null; // Optional WhatsApp contact
-  password_hash: string; // Secure password hash (if custom auth)
   profile_photo_url?: string | null; // Profile image URL
   location_url?: string | null; // Google Maps or custom location link
   city?: string | null; // City name

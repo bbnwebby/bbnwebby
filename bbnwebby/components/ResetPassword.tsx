@@ -120,6 +120,7 @@ const { data: authListener } = supabase.auth.onAuthStateChange(
       }
 
       console.log('✅ Password updated successfully')
+      
       setMessage('✅ Password updated successfully. Redirecting to sign in...')
 
       // Wait briefly for Supabase propagation

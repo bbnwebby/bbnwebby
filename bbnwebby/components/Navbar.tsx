@@ -35,8 +35,9 @@ const Navbar: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+            <div className="w-10"></div>
           {/* Logo */}
-          <div className="text-2xl font-semibold tracking-wide">BBN</div>
+          <div className="text-2xl px-10 font-semibold tracking-wide">BBN</div>
 
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center">

@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 import { Poppins, Playfair_Display } from "next/font/google";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 // Import and configure both fonts
 const poppins = Poppins({
@@ -43,7 +44,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <AuthProvider>
         {children}
+        </AuthProvider>
       </body>
     </html>
   );

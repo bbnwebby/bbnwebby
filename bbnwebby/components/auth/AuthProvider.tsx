@@ -64,29 +64,26 @@ const AuthContext = createContext<AuthContextType>({
 // 🧩 AuthProvider Component
 // =======================================
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // ---------- States ----------
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [makeupArtist, setMakeupArtist] = useState<MakeupArtist | null>(null)
   const [loadingUser, setLoadingUser] = useState<boolean>(true)
   const [loadingProfile, setLoadingProfile] = useState<boolean>(true)
 
-  // Combine loading states for a single flag
   const loading: boolean = loadingUser || loadingProfile
 
-  /**
-   * ✅ Clears all authentication and profile state
-   */
   const clearAuth = (): void => {
+    console.log('[AuthProvider:clearAuth] 🧹 Clearing all auth-related states...')
     setUser(null)
     setProfile(null)
     setMakeupArtist(null)
   }
 
   /**
-   * 🔁 Loads user session, profile, and artist data
+   * 🔁 Load session, profile, and artist info
    */
   const loadSession = useCallback(async (): Promise<void> => {
+    console.log('[AuthProvider:loadSession] 🔄 Loading session...')
     setLoadingUser(true)
     setLoadingProfile(true)
 
@@ -96,63 +93,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const sessionUser = data?.session?.user ?? null
       if (!sessionUser) {
-        console.warn('[AuthProvider] ❌ No active session found.')
+        console.warn('[AuthProvider:loadSession] ❌ No active session.')
         clearAuth()
         return
       }
 
-      console.log('[AuthProvider] ✅ Session user loaded:', sessionUser.id)
+      console.log('[AuthProvider:loadSession] ✅ User found:', {
+        id: sessionUser.id,
+        email: sessionUser.email,
+      })
+
       setUser(sessionUser)
 
-      // ✅ Fetch user profile by Supabase auth user ID
       const userProfile = await getUserProfile()
+      console.log('[AuthProvider:loadSession] 🧾 Profile fetched:', userProfile)
       setProfile(userProfile)
 
-      // ✅ If profile exists, load linked artist data
       if (userProfile) {
         const artistData = await getMakeupArtistByProfile(userProfile.id)
+        console.log('[AuthProvider:loadSession] 💄 Artist data fetched:', artistData)
         setMakeupArtist(artistData)
       } else {
+        console.log('[AuthProvider:loadSession] ⚠️ No profile found for user.')
         setMakeupArtist(null)
       }
     } catch (err) {
-      console.error('[AuthProvider] ❌ Failed to load session:', err)
+      console.error('[AuthProvider:loadSession] ❌ Session load error:', err)
       clearAuth()
     } finally {
       setLoadingUser(false)
       setLoadingProfile(false)
+      console.log('[AuthProvider:loadSession] ⏹️ Session load complete.')
     }
   }, [])
 
   /**
-   * 👂 Listen for Supabase auth state changes
-   * - Automatically updates user & profile when login/logout occurs.
+   * 👂 Auth State Change Listener
    */
   useEffect(() => {
+    console.log('[AuthProvider:useEffect] 🧠 Initializing auth state listener...')
     loadSession()
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`[AuthProvider:onAuthChange] 🔔 Event detected: ${event}`)
+
       const sessionUser = session?.user ?? null
 
       if (!sessionUser) {
-        console.log('[AuthProvider:onAuthChange] ❌ User signed out.')
+        console.log('[AuthProvider:onAuthChange] 🚪 User signed out.')
         clearAuth()
         setLoadingUser(false)
         setLoadingProfile(false)
         return
       }
 
-      console.log('[AuthProvider:onAuthChange] ✅ Auth user:', sessionUser.id)
+      console.log('[AuthProvider:onAuthChange] ✅ Active user:', {
+        id: sessionUser.id,
+        email: sessionUser.email,
+      })
       setUser(sessionUser)
 
       try {
         const fetchedProfile = await getUserProfile()
+        console.log('[AuthProvider:onAuthChange] 🧾 Loaded profile:', fetchedProfile)
         setProfile(fetchedProfile)
 
         if (fetchedProfile) {
           const artist = await getMakeupArtistByProfile(fetchedProfile.id)
+          console.log('[AuthProvider:onAuthChange] 💄 Loaded artist data:', artist)
           setMakeupArtist(artist)
         } else {
+          console.log('[AuthProvider:onAuthChange] ⚠️ No linked artist record.')
           setMakeupArtist(null)
         }
       } catch (err) {
@@ -165,108 +176,108 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => {
+      console.log('[AuthProvider:useEffect] 🧹 Cleaning up listener...')
       listener?.subscription?.unsubscribe()
     }
   }, [loadSession])
 
   /**
-   * 🚪 Logs out the current user
+   * 🚪 Logout handler
    */
   const logout = async (): Promise<void> => {
+    console.log('[AuthProvider:logout] 🚪 Attempting logout...')
     try {
       await supabase.auth.signOut()
       clearAuth()
-      console.log('[AuthProvider] ✅ Logged out successfully.')
+      console.log('[AuthProvider:logout] ✅ Logged out successfully.')
     } catch (err) {
-      console.error('[AuthProvider] ❌ Logout failed:', err)
+      console.error('[AuthProvider:logout] ❌ Logout failed:', err)
     }
   }
 
   /**
-   * 🔄 Refreshes the current Supabase session and user data
+   * 🔄 Refresh user session
    */
   const refreshSession = async (): Promise<void> => {
+    console.log('[AuthProvider:refreshSession] 🔄 Refreshing session...')
     await loadSession()
   }
 
   /**
-   * 🧍 Handles sign-up flow: Auth → Profile → Optional Artist
+   * 🧍 Sign-up Flow
    */
   const signUp: AuthContextType['signUp'] = async (data) => {
-    const {
-      email,
-      password,
-      fullName,
-      whatsappNumber,
-      city,
-      locationUrl,
-      profilePhotoUrl,
-      passwordHash,
-      isMakeupArtist,
-      artistUsername,
-      organisation,
-      designation,
-      instagramHandle,
-    } = data
+    console.log('[AuthProvider:signUp] 🧾 Sign-up initiated with data:', {
+      email: data.email,
+      fullName: data.fullName,
+      city: data.city,
+      isMakeupArtist: data.isMakeupArtist,
+    })
 
     try {
-      // Step 1️⃣: Create Supabase Auth account
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName } },
+        email: data.email,
+        password: data.password,
+        options: { data: { full_name: data.fullName } },
       })
       if (authError) throw new Error(authError.message)
 
       const newUser = authData.user ?? authData.session?.user
-      if (!newUser) throw new Error('Sign-up failed: No user returned from Supabase.')
+      if (!newUser) throw new Error('No user returned from Supabase sign-up.')
 
-      // Step 2️⃣: Create user profile
-      const newProfile = await createUserProfile({
-        auth_user_id: newUser.id,
-        full_name: fullName,
-        whatsapp_number: whatsappNumber ?? null,
-        password_hash: passwordHash,
-        profile_photo_url: profilePhotoUrl ?? null,
-        location_url: locationUrl ?? null,
-        city: city ?? null,
+      console.log('[AuthProvider:signUp] ✅ Supabase user created:', {
+        id: newUser.id,
+        email: newUser.email,
       })
 
-      if (!newProfile) throw new Error('Failed to create user profile.')
+      const newProfile = await createUserProfile({
+        auth_user_id: newUser.id,
+        full_name: data.fullName,
+        whatsapp_number: data.whatsappNumber ?? null,
+        password_hash: data.passwordHash,
+        profile_photo_url: data.profilePhotoUrl ?? null,
+        location_url: data.locationUrl ?? null,
+        city: data.city ?? null,
+      })
 
+      console.log('[AuthProvider:signUp] 🧾 User profile created:', newProfile)
       setUser(newUser)
       setProfile(newProfile)
 
-      // Step 3️⃣: Optionally create a makeup artist record
-      if (isMakeupArtist && artistUsername) {
+      if (data.isMakeupArtist && data.artistUsername) {
+        console.log('[AuthProvider:signUp] 💄 Creating makeup artist record...')
         const artistRecord = await createMakeupArtist({
-          username: artistUsername,
-          organisation: organisation ?? null,
-          designation: designation ?? null,
-          instagram_handle: instagramHandle ?? null,
+          username: data.artistUsername,
+          organisation: data.organisation ?? null,
+          designation: data.designation ?? null,
+          instagram_handle: data.instagramHandle ?? null,
           portfolio_pdf_url: null,
           status: 'pending',
         })
 
-        if (artistRecord) {
-          console.log('[AuthProvider] ✅ Makeup artist profile created.')
-          setMakeupArtist(artistRecord.artist)
-        }
+        console.log('[AuthProvider:signUp] ✅ Artist record created:', artistRecord)
+        if (artistRecord) setMakeupArtist(artistRecord.artist)
       }
 
+      console.log('[AuthProvider:signUp] 🎉 Sign-up completed successfully.')
       return {}
     } catch (err) {
-      console.error('[AuthProvider:signUp] ❌ Error during sign-up:', err)
-      const msg = err instanceof Error ? err.message : 'Unknown sign-up failure.'
+      console.error('[AuthProvider:signUp] ❌ Sign-up failed:', err)
+      const msg = err instanceof Error ? err.message : 'Unknown sign-up error.'
       return { error: msg }
     }
   }
 
   /**
-   * 🧾 Updates profile information in Supabase
+   * 🧾 Update profile info
    */
   const updateProfile: AuthContextType['updateProfile'] = async (updates) => {
-    if (!profile) return { error: 'No active profile found.' }
+    if (!profile) {
+      console.warn('[AuthProvider:updateProfile] ⚠️ No profile to update.')
+      return { error: 'No active profile found.' }
+    }
+
+    console.log('[AuthProvider:updateProfile] ✏️ Updating profile with:', updates)
 
     try {
       const { error } = await supabase
@@ -278,17 +289,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const refreshedProfile = await getUserProfile()
       setProfile(refreshedProfile)
-      console.log('[AuthProvider] ✅ Profile updated successfully.')
+      console.log('[AuthProvider:updateProfile] ✅ Profile updated:', refreshedProfile)
       return {}
     } catch (err) {
-      console.error('[AuthProvider:updateProfile] ❌ Failed:', err)
+      console.error('[AuthProvider:updateProfile] ❌ Update failed:', err)
       const msg = err instanceof Error ? err.message : 'Unknown update failure.'
       return { error: msg }
     }
   }
 
   // =======================================
-  // 🎯 Return Context Provider
+  // 🎯 Context Return
   // =======================================
   return (
     <AuthContext.Provider
@@ -310,6 +321,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // =======================================
 // ⚡ Hook: useAuth()
-// Provides easy access to Auth context
 // =======================================
 export const useAuth = (): AuthContextType => useContext(AuthContext)

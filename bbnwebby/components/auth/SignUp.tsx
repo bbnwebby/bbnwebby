@@ -163,10 +163,56 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
       }
 
       console.log('✅ Artist record successfully inserted!');
-      setMessage({
-        type: 'success',
-        text: 'Registration successful! Please verify your email before logging in.',
-      });
+
+// 8️⃣ Fetch newly created artist ID
+const { data: artistData, error: fetchArtistError } = await supabase
+  .from('makeup_artists')
+  .select('id')
+  .eq('user_profile_id', profileData.id)
+  .single();
+
+if (fetchArtistError || !artistData) {
+  throw new Error('Failed to fetch newly created artist record.');
+}
+
+const artistId: string = artistData.id;
+console.log('🎨 Artist ID:', artistId);
+
+// 9️⃣ Generate & upload the ID card automatically
+try {
+  console.log('🪪 Generating artist ID card...');
+
+  // create a temporary off-screen canvas for rendering
+  const canvas = document.createElement('canvas');
+  canvas.width = 1000; // adjust according to template aspect ratio
+  canvas.height = 600;
+
+  // your default ID card template ID from Supabase
+  const templateId = 'e4b514f3-28df-4bde-a0fe-0ca9b47c9250'; 
+
+  // dynamically import the generator to avoid SSR issues
+  const { generateTemplateImage } = await import('@/lib/generation/generateTemplateImage');
+
+  // generate and upload the card — returns the final Cloudinary URL
+  const cardUrl: string = await generateTemplateImage('id_card', templateId, artistId, canvas);
+
+  console.log('✅ ID Card generated and uploaded:', cardUrl);
+
+  // 🔄 10️⃣ Save the Cloudinary URL into makeup_artists.idcard_url
+  const { error: updateError } = await supabase
+    .from('makeup_artists')
+    .update({ idcard_url: cardUrl })
+    .eq('id', artistId);
+
+  if (updateError) {
+    throw new Error(`Failed to update artist ID card URL: ${updateError.message}`);
+  }
+
+  console.log('💾 ID card URL successfully saved to makeup_artists table.');
+} catch (cardError) {
+  console.error('❌ Failed to generate or save ID card:', cardError);
+}
+
 
       // 7️⃣ Reset all states
       console.log('🧹 Resetting form...');
@@ -274,12 +320,12 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
             <InputField label="Email" required value={email} onChange={setEmail} type="email" />
             <InputField label="Password" required value={password} onChange={setPassword} type="password" />
             <InputField label="Full Name" required value={fullName} onChange={setFullName} />
-            <InputField label="WhatsApp Number" value={whatsappNumber} onChange={setWhatsappNumber} />
-            <InputField label="City" value={city} onChange={setCity} />
+            <InputField label="WhatsApp Number" required value={whatsappNumber} onChange={setWhatsappNumber} />
+            <InputField label="City" required value={city} onChange={setCity} />
 
             <div>
               <label className="block font-semibold mb-1">Profile Image</label>
-              <input type="file" accept="image/*" onChange={(e) => handleProfileChange(e.target.files)} />
+              <input required type="file" accept="image/*" onChange={(e) => handleProfileChange(e.target.files)} />
               {profilePreview && (
                 <img
                   src={profilePreview}
@@ -292,13 +338,14 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
 
           {/* RIGHT */}
           <div className="space-y-4">
-            <InputField label="Organisation" value={organisation} onChange={setOrganisation} />
-            <InputField label="Designation" value={designation} onChange={setDesignation} />
-            <InputField label="Instagram Handle" value={instagramHandle} onChange={setInstagramHandle} />
+            <InputField required label="Organisation" value={organisation} onChange={setOrganisation} />
+            <InputField required label="Designation" value={designation} onChange={setDesignation} />
+            <InputField required label="Instagram Handle" value={instagramHandle} onChange={setInstagramHandle} />
 
             <div>
               <label className="block font-semibold mb-1">Logo</label>
               <input
+                required
                 type="file"
                 accept="image/*"
                 onChange={(e) =>
@@ -310,6 +357,7 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
             <div>
               <label className="block font-semibold mb-1">Portfolio PDF</label>
               <input
+                required
                 type="file"
                 accept="application/pdf"
                 onChange={(e) =>

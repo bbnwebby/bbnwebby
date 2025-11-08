@@ -2,27 +2,28 @@
 // lib/generation/canvasUtils.ts
 // Canvas Manipulation Utilities (Verbose Logging)
 // -----------------------------------------------
-// - Includes detailed console logs for each step.
-// - No use of `any` (strict TypeScript compliance).
-// - Optimized to prevent unnecessary blocking while debugging.
+// - Every console log includes file + function name.
+// - Strict TypeScript compliance, no `any`.
 // =======================================
+
+const FILE = 'canvasUtils.ts';
 
 /**
  * Loads an image from a given URL with full debug logs.
  */
 export const loadImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
-    console.log('🖼️ [loadImage] Loading image:', url);
+    console.log(`🖼️ [${FILE} -> loadImage] Loading image:`, url);
     const img = new Image();
     img.crossOrigin = 'anonymous';
 
     img.onload = () => {
-      console.log('✅ [loadImage] Image loaded successfully:', url);
+      console.log(`✅ [${FILE} -> loadImage] Image loaded successfully:`, url);
       resolve(img);
     };
 
     img.onerror = (error) => {
-      console.error('❌ [loadImage] Failed to load image:', url, error);
+      console.error(`❌ [${FILE} -> loadImage] Failed to load image:`, url, error);
       reject(error);
     };
 
@@ -39,16 +40,18 @@ export const canvasToFile = (
   quality: number = 0.95
 ): Promise<File> =>
   new Promise((resolve, reject) => {
-    console.log('🧾 [canvasToFile] Starting canvas-to-file conversion:', filename);
+    console.log(`🧾 [${FILE} -> canvasToFile] Starting canvas-to-file conversion:`, filename);
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          console.error('❌ [canvasToFile] Failed to convert canvas to Blob.');
+          console.error(`❌ [${FILE} -> canvasToFile] Failed to convert canvas to Blob.`);
           reject(new Error('Canvas conversion to Blob failed.'));
           return;
         }
         const file = new File([blob], filename, { type: 'image/jpeg' });
-        console.log('✅ [canvasToFile] Canvas converted successfully:', file.name, file.size, 'bytes');
+        console.log(
+          `✅ [${FILE} -> canvasToFile] Canvas converted successfully: ${file.name}, ${file.size} bytes`
+        );
         resolve(file);
       },
       'image/jpeg',
@@ -63,9 +66,9 @@ export const canvasToBase64 = (
   canvas: HTMLCanvasElement,
   quality: number = 0.95
 ): string => {
-  console.log('🎨 [canvasToBase64] Converting canvas to Base64...');
+  console.log(`🎨 [${FILE} -> canvasToBase64] Converting canvas to Base64...`);
   const dataUrl = canvas.toDataURL('image/jpeg', quality);
-  console.log('✅ [canvasToBase64] Base64 conversion complete. Length:', dataUrl.length);
+  console.log(`✅ [${FILE} -> canvasToBase64] Base64 conversion complete. Length:`, dataUrl.length);
   return dataUrl;
 };
 
@@ -81,7 +84,7 @@ export const drawWrappedText = (
   maxWidth: number,
   lineHeight: number
 ): void => {
-  console.log('✏️ [drawWrappedText] Drawing wrapped text:', { x, y, maxWidth, lineHeight });
+  console.log(`✏️ [${FILE} -> drawWrappedText] Drawing wrapped text:`, { x, y, maxWidth, lineHeight });
   const words = text.split(' ');
   let line = '';
   let currentY = y;
@@ -91,7 +94,7 @@ export const drawWrappedText = (
     const metrics = ctx.measureText(testLine);
 
     if (metrics.width > maxWidth && line !== '') {
-      console.log('➡️ [drawWrappedText] New line due to width limit:', currentY);
+      console.log(`➡️ [${FILE} -> drawWrappedText] New line due to width limit:`, currentY);
       ctx.fillText(line.trim(), x, currentY);
       line = `${word} `;
       currentY += lineHeight;
@@ -101,7 +104,7 @@ export const drawWrappedText = (
   }
 
   ctx.fillText(line.trim(), x, currentY);
-  console.log('✅ [drawWrappedText] Finished drawing wrapped text.');
+  console.log(`✅ [${FILE} -> drawWrappedText] Finished drawing wrapped text.`);
 };
 
 /**
@@ -121,15 +124,15 @@ export const getAlignedX = (
   switch (alignment) {
     case 'center':
       alignedX = baseX + (boxWidth - textWidth) / 2;
-      console.log('↔️ [getAlignedX] Center alignment applied:', alignedX);
+      console.log(`↔️ [${FILE} -> getAlignedX] Center alignment applied:`, alignedX);
       break;
     case 'right':
       alignedX = baseX + boxWidth - textWidth;
-      console.log('➡️ [getAlignedX] Right alignment applied:', alignedX);
+      console.log(`➡️ [${FILE} -> getAlignedX] Right alignment applied:`, alignedX);
       break;
     default:
       alignedX = baseX;
-      console.log('↩️ [getAlignedX] Left alignment applied:', alignedX);
+      console.log(`↩️ [${FILE} -> getAlignedX] Left alignment applied:`, alignedX);
   }
 
   return alignedX;
@@ -143,9 +146,9 @@ export const replacePlaceholders = (
   text: string | null | undefined,
   replacements: Record<string, string>
 ): string => {
-  console.log('🧠 [replacePlaceholders] Starting placeholder replacement...');
+  console.log(`🧠 [${FILE} -> replacePlaceholders] Starting placeholder replacement...`);
   if (!text) {
-    console.warn('⚠️ [replacePlaceholders] Provided text is null or undefined.');
+    console.warn(`⚠️ [${FILE} -> replacePlaceholders] Provided text is null or undefined.`);
     return '';
   }
 
@@ -153,13 +156,13 @@ export const replacePlaceholders = (
   for (const [key, value] of Object.entries(replacements)) {
     const pattern = new RegExp(`{{${key}}}`, 'g');
     if (!pattern.test(result)) {
-      console.warn(`⚠️ [replacePlaceholders] Placeholder not found in text: {{${key}}}`);
+      console.warn(`⚠️ [${FILE} -> replacePlaceholders] Placeholder not found in text: {{${key}}}`);
     } else {
-      console.log(`🔁 [replacePlaceholders] Replacing {{${key}}} → "${value}"`);
+      console.log(`🔁 [${FILE} -> replacePlaceholders] Replacing {{${key}}} → "${value}"`);
     }
     result = result.replace(pattern, value ?? '');
   }
 
-  console.log('✅ [replacePlaceholders] Replacement complete. Final text:', result);
+  console.log(`✅ [${FILE} -> replacePlaceholders] Replacement complete. Final text:`, result);
   return result;
 };

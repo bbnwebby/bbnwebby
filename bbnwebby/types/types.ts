@@ -33,67 +33,78 @@ export interface MakeupArtist {
   status?: "pending" | "approved" | "rejected" | null; // Artist status (enum)
   portfolio_pdf_url?: string | null; // PDF portfolio link
   logo_url?: string | null
+  idcard_url?: string | null
   created_at?: string | null; // Record creation timestamp
   updated_at?: string | null; // Record last update timestamp
 }
 
 
 
+
 /**
- * Represents a design template created by a makeup artist.
+ * Shared binding configuration for text/image elements.
  */
-export interface Template {
-  id: string; // Unique identifier (UUID)
-  artist_id: string; // FK to makeup_artists.id
-  name: string; // Template display name
-  type: string; // Template category/type (e.g., "certificate", "poster")
-  background_img_url?: string | null; // Background image URL
-  created_at?: string | null; // Record creation timestamp
-  updated_at?: string | null; // Record last update timestamp
+export interface BindingConfig {
+  source: 'user_profiles' | 'makeup_artists';
+  field: string;
+  fallback?: string;
+  transform?: 'uppercase' | 'lowercase' | 'capitalize';
 }
 
-
 /**
- * Represents a single image element associated with a template.
- */
-export interface ImageElement {
-  id: string; // Unique identifier (UUID)
-  template_id: string; // Foreign key referencing templates.id
-  x: number; // X position on the canvas
-  y: number; // Y position on the canvas
-  width: number; // Element width
-  height: number; // Element height
-  object_fit?: string | null; // CSS object-fit property (default: 'contain')
-  image_url: string; // Cloudinary or hosted image URL
-  z_index?: number | null; // Z-order stacking index (default: 0)
-  created_at?: string | null; // Record creation timestamp
-  updated_at?: string | null; // Record last update timestamp
-}
-
-
-
-
-/**
- * Represents a text element placed on a template.
+ * Text layer element mapped to Supabase `text_elements`.
  */
 export interface TextElement {
-  id: string; // Unique identifier (UUID)
-  template_id: string; // FK to templates.id
-  text?: string | null; // Display text content
-  text_wrap?: boolean | null; // If true, wraps text (default: false)
-  line_height?: number | null; // Line height multiplier (default: 1.2)
-  font?: string | null; // Font family (default: 'Poppins')
-  font_size?: number | null; // Font size in px (default: 14)
-  text_color?: string | null; // Text color in hex (default: '#000000')
-  bg_color?: string | null; // Background color (default: transparent white)
-  bg_transparency?: number | null; // Background opacity (0–1)
-  x: number; // X coordinate
-  y: number; // Y coordinate
-  width: number; // Width of text box
-  height: number; // Height of text box
-  z_index?: number | null; // Stacking order (default: 0)
-  created_at?: string | null; // Record creation timestamp
-  updated_at?: string | null; // Record last update timestamp
+  id: string;
+  template_id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  alignment?: 'left' | 'center' | 'right' | 'justify' | null;
+  text_wrap?: boolean;
+  line_height?: number;
+  font?: string;
+  font_size?: number;
+  text_color?: string;
+  bg_color?: string;
+  bg_transparency?: number;
+  z_index?: number;
+  binding_config?: BindingConfig[] | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Image layer element mapped to Supabase `image_elements`.
+ */
+export interface ImageElement {
+  id: string;
+  template_id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  object_fit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+  image_url: string;
+  z_index?: number;
+  binding_config?: BindingConfig[] | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Template base for certificates or ID cards.
+ */
+export interface Template {
+  id: string;
+  name: string;
+  type: 'certificate' | 'id_card';
+  background_img_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+text_elements?: TextElement[] | null;
+image_elements?: ImageElement[] | null;
 }
 
 

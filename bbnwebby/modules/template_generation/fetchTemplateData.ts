@@ -1,6 +1,5 @@
 // lib/generation/fetchTemplateData.ts
 import { supabase } from '@/lib/supabaseClient'
-import { Template, TextElement, ImageElement } from '@/types/types'
 
 /**
  * Fetches full template data including text and image elements.

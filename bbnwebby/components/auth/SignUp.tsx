@@ -57,177 +57,200 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
   };
 
   // ==================== Submit Handler ====================
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
-    console.clear();
-    console.group('📝 MAKEUP ARTIST REGISTRATION START');
-    setMessage(null);
-    setLoading(true);
+const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  e.preventDefault();
+  console.clear();
+  console.group('📝 MAKEUP ARTIST REGISTRATION START');
+  setMessage(null);
+  setLoading(true);
 
-    try {
-      // 1️⃣ Upload files to Cloudinary
-      console.log('📤 Uploading selected files to Cloudinary...');
-      const uploaded = await uploadToCloudinary({
-        profileImageFile,
-        logoFile,
-        portfolioPdfFile,
-      });
-      console.log('✅ All uploads complete:', uploaded);
+  const FILE = 'SignUp.tsx';
+  const FUNC = 'handleSubmit';
 
-      // 2️⃣ Create Supabase Auth user
-      console.log('👤 Creating Supabase Auth user...');
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-  email,
-  password,
-  options: {
-    emailRedirectTo: `${window.location.origin}/auth/callback`, // 👈 important
-  },
-});
+  // Utility: convert image File/Blob → JPEG File
+  const convertToJpeg = async (file: File | Blob, quality = 0.9): Promise<File> => {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = URL.createObjectURL(file);
+    });
 
-      if (authError) {
-        console.error('❌ Auth creation failed:', authError.message);
-        throw new Error(authError.message);
-      }
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
 
-      const user = authData.user;
-      if (!user) {
-        console.warn('⚠️ No user returned — email verification required');
-        setMessage({
-          type: 'success',
-          text: 'Registration successful! Please verify your email before logging in.',
-        });
-        setLoading(false);
-        console.groupEnd();
-        return;
-      }
-
-      // 3️⃣ Insert into user_profiles
-      console.log('🗂️ Inserting new record into user_profiles...');
-      const { error: profileError } = await supabase.from('user_profiles').insert([
-        {
-          auth_user_id: user.id,
-          full_name: fullName,
-          whatsapp_number: whatsappNumber || null,
-          city: city || null,
-          profile_photo_url: uploaded.profileImageUrl || null,
+    return await new Promise<File>((resolve) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) throw new Error('JPEG conversion failed');
+          resolve(new File([blob], file instanceof File ? file.name.replace(/\.\w+$/, '.jpg') : 'converted.jpg', { type: 'image/jpeg' }));
         },
-      ]);
-
-      if (profileError) {
-        console.error('❌ user_profiles insert failed:', profileError.message);
-        throw new Error(`Profile creation failed: ${profileError.message}`);
-      }
-
-      // 4️⃣ Fetch profile ID
-      console.log('🔍 Fetching created user_profile ID...');
-      const { data: profileData, error: fetchError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (fetchError || !profileData) {
-        console.error('❌ Failed to fetch profile ID:', fetchError);
-        throw new Error('Unable to retrieve user profile.');
-      }
-
-      console.log('✅ Profile ID fetched:', profileData.id);
-
-      // 5️⃣ Build username & portfolio URL dynamically
-      const clean = (s: string): string =>
-        s?.trim().replace(/\s+/g, '_').toLowerCase() || 'unknown';
-      const username = `${clean(fullName)}@${clean(designation)}@${clean(
-        organisation
-      )}@${clean(city)}`;
-
-      console.log('👤 Generated username:', username);
-
-      // 6️⃣ Insert into makeup_artists
-      console.log('💄 Inserting artist record into makeup_artists...');
-      const { error: artistError } = await supabase.from('makeup_artists').insert([
-        {
-          user_profile_id: profileData.id,
-          organisation: organisation || null,
-          designation: designation || null,
-          instagram_handle: instagramHandle || null,
-          username,
-          portfolio_pdf_url: uploaded.portfolioPdfUrl || null,
-          logo_url: uploaded.logoUrl || null,
-          status: 'pending',
-        },
-      ]);
-
-      if (artistError) {
-        console.error('❌ makeup_artists insert failed:', artistError.message);
-        throw new Error(`Artist save failed: ${artistError.message}`);
-      }
-
-      console.log('✅ Artist record successfully inserted!');
-
-// 8️⃣ Fetch newly created artist ID
-const { data: artistData, error: fetchArtistError } = await supabase
-  .from('makeup_artists')
-  .select('id')
-  .eq('user_profile_id', profileData.id)
-  .single();
-
-if (fetchArtistError || !artistData) {
-  throw new Error('Failed to fetch newly created artist record.');
-}
-
-const artistId: string = artistData.id;
-console.log('🎨 Artist ID:', artistId);
-
-// 9️⃣ Generate & upload the ID card automatically
-try {
-  console.log('🪪 Generating artist ID card...');
-
-  // create a temporary off-screen canvas for rendering
-  const canvas = document.createElement('canvas');
-  canvas.width = 1000; // adjust according to template aspect ratio
-  canvas.height = 600;
-
-  // your default ID card template ID from Supabase
-  const templateId = 'e4b514f3-28df-4bde-a0fe-0ca9b47c9250'; 
-
-  // dynamically import the generator to avoid SSR issues
-  const { generateTemplateImage } = await import('@/lib/generation/generateTemplateImage');
-
-  // generate and upload the card — returns the final Cloudinary URL
-  const cardUrl: string = await generateTemplateImage('id_card', templateId, artistId, canvas);
-
-  console.log('✅ ID Card generated and uploaded:', cardUrl);
-
-  // 🔄 10️⃣ Save the Cloudinary URL into makeup_artists.idcard_url
-  const { error: updateError } = await supabase
-    .from('makeup_artists')
-    .update({ idcard_url: cardUrl })
-    .eq('id', artistId);
-
-  if (updateError) {
-    throw new Error(`Failed to update artist ID card URL: ${updateError.message}`);
-  }
-
-  console.log('💾 ID card URL successfully saved to makeup_artists table.');
-} catch (cardError) {
-  console.error('❌ Failed to generate or save ID card:', cardError);
-}
-
-
-      // 7️⃣ Reset all states
-      console.log('🧹 Resetting form...');
-      resetForm();
-
-      console.groupEnd();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Unexpected error occurred';
-      console.error('❌ Registration Error:', msg);
-      setMessage({ type: 'error', text: msg });
-      console.groupEnd();
-    } finally {
-      setLoading(false);
-    }
+        'image/jpeg',
+        quality
+      );
+    });
   };
+
+  try {
+    // 1️⃣ Upload files in parallel
+    console.log(`[${FILE} -> ${FUNC}] 📤 Uploading files in parallel...`);
+    const t1 = performance.now();
+
+    const [profileImageUrl, logoUrl, portfolioPdfUrl] = await Promise.all([
+      profileImageFile
+        ? convertToJpeg(profileImageFile).then((file) => CloudinaryService.upload(file, 'profile_images'))
+        : Promise.resolve(null),
+      logoFile
+        ? convertToJpeg(logoFile).then((file) => CloudinaryService.upload(file, 'logos'))
+        : Promise.resolve(null),
+      portfolioPdfFile
+        ? CloudinaryService.upload(portfolioPdfFile, 'portfolios')
+        : Promise.resolve(null),
+    ]);
+
+    console.log(`[${FILE} -> ${FUNC}] ✅ All uploads complete in ${(performance.now() - t1).toFixed(1)}ms`, {
+      profileImageUrl,
+      logoUrl,
+      portfolioPdfUrl,
+    });
+
+    // 2️⃣ Create Supabase Auth user
+    console.log(`[${FILE} -> ${FUNC}] 👤 Creating Supabase Auth user...`);
+    const t2 = performance.now();
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    console.log(`[${FILE} -> ${FUNC}] ⏱️ Auth signup took ${(performance.now() - t2).toFixed(1)}ms`);
+
+    if (authError) throw new Error(authError.message);
+    const user = authData.user;
+    if (!user) {
+      setMessage({ type: 'success', text: 'Registration successful! Please verify your email.' });
+      setLoading(false);
+      console.groupEnd();
+      return;
+    }
+
+    // 3️⃣ Insert into user_profiles
+    console.log(`[${FILE} -> ${FUNC}] 🗂️ Inserting new record into user_profiles...`);
+    const t3 = performance.now();
+    const { error: profileError } = await supabase.from('user_profiles').insert([
+      {
+        auth_user_id: user.id,
+        full_name: fullName,
+        whatsapp_number: whatsappNumber || null,
+        city: city || null,
+        profile_photo_url: profileImageUrl || null,
+      },
+    ]);
+    console.log(`[${FILE} -> ${FUNC}] ⏱️ user_profiles insert took ${(performance.now() - t3).toFixed(1)}ms`);
+
+    if (profileError) throw new Error(`Profile creation failed: ${profileError.message}`);
+
+    // 4️⃣ Fetch profile ID
+    console.log(`[${FILE} -> ${FUNC}] 🔍 Fetching created user_profile ID...`);
+    const t4 = performance.now();
+    const { data: profileData, error: fetchError } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single();
+    console.log(`[${FILE} -> ${FUNC}] ⏱️ Fetch profile ID took ${(performance.now() - t4).toFixed(1)}ms`);
+
+    if (fetchError || !profileData) throw new Error('Unable to retrieve user profile.');
+    console.log(`[${FILE} -> ${FUNC}] ✅ Profile ID: ${profileData.id}`);
+
+    // 5️⃣ Build username
+    const clean = (s: string) => s?.trim().replace(/\s+/g, '_').toLowerCase() || 'unknown';
+    const username = `${clean(fullName)}@${clean(designation)}@${clean(organisation)}@${clean(city)}`;
+    console.log(`[${FILE} -> ${FUNC}] 👤 Generated username: ${username}`);
+
+    // 6️⃣ Insert into makeup_artists
+    console.log(`[${FILE} -> ${FUNC}] 💄 Inserting artist record...`);
+    const t5 = performance.now();
+    const { error: artistError } = await supabase.from('makeup_artists').insert([
+      {
+        user_profile_id: profileData.id,
+        organisation: organisation || null,
+        designation: designation || null,
+        instagram_handle: instagramHandle || null,
+        username,
+        portfolio_pdf_url: portfolioPdfUrl || null,
+        logo_url: logoUrl || null,
+        status: 'pending',
+      },
+    ]);
+    console.log(`[${FILE} -> ${FUNC}] ⏱️ Artist insert took ${(performance.now() - t5).toFixed(1)}ms`);
+    if (artistError) throw new Error(`Artist save failed: ${artistError.message}`);
+
+    // 7️⃣ Fetch artist ID
+    const { data: artistData, error: fetchArtistError } = await supabase
+      .from('makeup_artists')
+      .select('id')
+      .eq('user_profile_id', profileData.id)
+      .single();
+    if (fetchArtistError || !artistData) throw new Error('Failed to fetch artist record.');
+    const artistId: string = artistData.id;
+    console.log(`[${FILE} -> ${FUNC}] 🎨 Artist ID: ${artistId}`);
+
+    // 8️⃣ Generate & upload ID card
+    try {
+      console.log(`[${FILE} -> ${FUNC}] 🪪 Generating artist ID card...`);
+      const templateId = 'e4b514f3-28df-4bde-a0fe-0ca9b47c9250';
+      const bgImage = new Image();
+      bgImage.src = '/images/templates/base_id_bg.jpg';
+      await new Promise<void>((resolve, reject) => {
+        bgImage.onload = () => resolve();
+        bgImage.onerror = () => reject();
+      });
+
+      const { generateTemplateImage } = await import('@/modules/template_generation/generateTemplateImage');
+
+      let profileImageHtml: HTMLImageElement | null = null;
+      if (profileImageFile) {
+        profileImageHtml = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = URL.createObjectURL(profileImageFile);
+        });
+      }
+
+      const tCard = performance.now();
+      const cardUrl: string = await generateTemplateImage('id_card', templateId, artistId, bgImage, profileImageHtml);
+      console.log(`[${FILE} -> ${FUNC}] ⏱️ ID card generation took ${(performance.now() - tCard).toFixed(1)}ms`);
+      console.log(`[${FILE} -> ${FUNC}] ✅ ID Card uploaded: ${cardUrl}`);
+
+      const tUpdateCard = performance.now();
+      const { error: updateError } = await supabase
+        .from('makeup_artists')
+        .update({ idcard_url: cardUrl })
+        .eq('id', artistId);
+      console.log(`[${FILE} -> ${FUNC}] ⏱️ Saving ID card URL took ${(performance.now() - tUpdateCard).toFixed(1)}ms`);
+      if (updateError) throw new Error(`Failed to save ID card URL: ${updateError.message}`);
+      console.log(`[${FILE} -> ${FUNC}] 💾 ID card URL saved successfully.`);
+    } catch (cardError) {
+      console.error(`[${FILE} -> ${FUNC}] ❌ Failed to generate/save ID card:`, cardError);
+    }
+
+    // 9️⃣ Reset form
+    console.log(`[${FILE} -> ${FUNC}] 🧹 Resetting form...`);
+    resetForm();
+    console.groupEnd();
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unexpected error occurred';
+    console.error(`[${FILE} -> ${FUNC}] ❌ Registration Error:`, msg);
+    setMessage({ type: 'error', text: msg });
+    console.groupEnd();
+  } finally {
+    setLoading(false);
+  }
+};
 
   /** Reset the form cleanly after success */
   const resetForm = (): void => {

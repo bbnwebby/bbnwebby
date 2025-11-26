@@ -13,17 +13,32 @@ const FILE = 'canvasUtils.ts';
  */
 export const loadImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
+    const startTime = performance.now();
     console.log(`🖼️ [${FILE} -> loadImage] Loading image:`, url);
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
 
     img.onload = () => {
-      console.log(`✅ [${FILE} -> loadImage] Image loaded successfully:`, url);
+      const endTime = performance.now();
+      console.log(
+        `✅ [${FILE} -> loadImage] Image loaded successfully in ${(endTime - startTime).toFixed(
+          2
+        )}ms:`,
+        url
+      );
       resolve(img);
     };
 
     img.onerror = (error) => {
-      console.error(`❌ [${FILE} -> loadImage] Failed to load image:`, url, error);
+      const endTime = performance.now();
+      console.error(
+        `❌ [${FILE} -> loadImage] Failed to load image in ${(endTime - startTime).toFixed(
+          2
+        )}ms:`,
+        url,
+        error
+      );
       reject(error);
     };
 
@@ -40,17 +55,29 @@ export const canvasToFile = (
   quality: number = 0.95
 ): Promise<File> =>
   new Promise((resolve, reject) => {
+    const startTime = performance.now();
     console.log(`🧾 [${FILE} -> canvasToFile] Starting canvas-to-file conversion:`, filename);
+
     canvas.toBlob(
       (blob) => {
+        const endTime = performance.now();
+
         if (!blob) {
-          console.error(`❌ [${FILE} -> canvasToFile] Failed to convert canvas to Blob.`);
+          console.error(
+            `❌ [${FILE} -> canvasToFile] Conversion failed after ${(endTime - startTime).toFixed(
+              2
+            )}ms`
+          );
           reject(new Error('Canvas conversion to Blob failed.'));
           return;
         }
+
         const file = new File([blob], filename, { type: 'image/jpeg' });
+
         console.log(
-          `✅ [${FILE} -> canvasToFile] Canvas converted successfully: ${file.name}, ${file.size} bytes`
+          `✅ [${FILE} -> canvasToFile] Successfully converted in ${(endTime - startTime).toFixed(
+            2
+          )}ms → ${file.name}, ${file.size} bytes`
         );
         resolve(file);
       },
@@ -66,9 +93,19 @@ export const canvasToBase64 = (
   canvas: HTMLCanvasElement,
   quality: number = 0.95
 ): string => {
+  const startTime = performance.now();
   console.log(`🎨 [${FILE} -> canvasToBase64] Converting canvas to Base64...`);
+
   const dataUrl = canvas.toDataURL('image/jpeg', quality);
-  console.log(`✅ [${FILE} -> canvasToBase64] Base64 conversion complete. Length:`, dataUrl.length);
+
+  const endTime = performance.now();
+  console.log(
+    `✅ [${FILE} -> canvasToBase64] Base64 conversion complete in ${(endTime - startTime).toFixed(
+      2
+    )}ms. Length:`,
+    dataUrl.length
+  );
+
   return dataUrl;
 };
 
@@ -84,7 +121,14 @@ export const drawWrappedText = (
   maxWidth: number,
   lineHeight: number
 ): void => {
-  console.log(`✏️ [${FILE} -> drawWrappedText] Drawing wrapped text:`, { x, y, maxWidth, lineHeight });
+  const startTime = performance.now();
+  console.log(`✏️ [${FILE} -> drawWrappedText] Drawing wrapped text:`, {
+    x,
+    y,
+    maxWidth,
+    lineHeight
+  });
+
   const words = text.split(' ');
   let line = '';
   let currentY = y;
@@ -104,7 +148,13 @@ export const drawWrappedText = (
   }
 
   ctx.fillText(line.trim(), x, currentY);
-  console.log(`✅ [${FILE} -> drawWrappedText] Finished drawing wrapped text.`);
+
+  const endTime = performance.now();
+  console.log(
+    `✅ [${FILE} -> drawWrappedText] Finished drawing wrapped text in ${(endTime - startTime).toFixed(
+      2
+    )}ms`
+  );
 };
 
 /**
@@ -118,21 +168,40 @@ export const getAlignedX = (
   boxWidth: number,
   alignment: 'left' | 'center' | 'right'
 ): number => {
+  const startTime = performance.now();
+
   const textWidth = ctx.measureText(text).width;
   let alignedX: number;
 
   switch (alignment) {
     case 'center':
       alignedX = baseX + (boxWidth - textWidth) / 2;
-      console.log(`↔️ [${FILE} -> getAlignedX] Center alignment applied:`, alignedX);
+      console.log(
+        `↔️ [${FILE} -> getAlignedX] Center alignment applied in ${(performance.now() - startTime).toFixed(
+          2
+        )}ms:`,
+        alignedX
+      );
       break;
+
     case 'right':
       alignedX = baseX + boxWidth - textWidth;
-      console.log(`➡️ [${FILE} -> getAlignedX] Right alignment applied:`, alignedX);
+      console.log(
+        `➡️ [${FILE} -> getAlignedX] Right alignment applied in ${(performance.now() - startTime).toFixed(
+          2
+        )}ms:`,
+        alignedX
+      );
       break;
+
     default:
       alignedX = baseX;
-      console.log(`↩️ [${FILE} -> getAlignedX] Left alignment applied:`, alignedX);
+      console.log(
+        `↩️ [${FILE} -> getAlignedX] Left alignment applied in ${(performance.now() - startTime).toFixed(
+          2
+        )}ms:`,
+        alignedX
+      );
   }
 
   return alignedX;
@@ -146,7 +215,9 @@ export const replacePlaceholders = (
   text: string | null | undefined,
   replacements: Record<string, string>
 ): string => {
+  const startTime = performance.now();
   console.log(`🧠 [${FILE} -> replacePlaceholders] Starting placeholder replacement...`);
+
   if (!text) {
     console.warn(`⚠️ [${FILE} -> replacePlaceholders] Provided text is null or undefined.`);
     return '';
@@ -155,14 +226,23 @@ export const replacePlaceholders = (
   let result = text;
   for (const [key, value] of Object.entries(replacements)) {
     const pattern = new RegExp(`{{${key}}}`, 'g');
+
     if (!pattern.test(result)) {
-      console.warn(`⚠️ [${FILE} -> replacePlaceholders] Placeholder not found in text: {{${key}}}`);
+      console.warn(`⚠️ [${FILE} -> replacePlaceholders] Placeholder not found: {{${key}}}`);
     } else {
-      console.log(`🔁 [${FILE} -> replacePlaceholders] Replacing {{${key}}} → "${value}"`);
+      console.log(`🔁 [${FILE} -> replacePlaceholders] {{${key}}} → "${value}"`);
     }
+
     result = result.replace(pattern, value ?? '');
   }
 
-  console.log(`✅ [${FILE} -> replacePlaceholders] Replacement complete. Final text:`, result);
+  const endTime = performance.now();
+  console.log(
+    `✅ [${FILE} -> replacePlaceholders] Replacement complete in ${(endTime - startTime).toFixed(
+      2
+    )}ms. Final text:`,
+    result
+  );
+
   return result;
 };

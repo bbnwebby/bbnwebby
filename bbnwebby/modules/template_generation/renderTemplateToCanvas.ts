@@ -21,6 +21,7 @@ import {
   getAlignedX,
   loadImage,
 } from '@/modules/template_generation/canvasUtils'
+import { logDebug } from '@/utils/Debugger'
 
 const FILE = 'lib/generation/renderTemplateToCanvas.ts'
 
@@ -31,12 +32,13 @@ function getValueFromPath<T extends Record<string, unknown>>(
   obj: T,
   path: string | undefined
 ): string {
-  const FUNC = 'getValueFromPath'
-  const start = performance.now()
-  console.log(`[${FILE} -> ${FUNC}] Started at: ${start.toFixed(2)}ms | Path: ${path}`)
+  const FN = 'getValueFromPath'
+  const ctx = { file: FILE, fn: FN }
+  logDebug.startTimer('getValueFromPath', ctx)
 
   if (!path) {
-    console.warn(`[${FILE} -> ${FUNC}] ⚠️ Invalid or missing path received:`, path)
+    logDebug.warn(`⚠️ Invalid or missing path received: ${String(path)}`, ctx)
+    logDebug.stopTimer('getValueFromPath', ctx)
     return ''
   }
 
@@ -44,19 +46,17 @@ function getValueFromPath<T extends Record<string, unknown>>(
   let current: unknown = obj
   for (const key of keys) {
     if (typeof current !== 'object' || current === null) {
-      console.warn(`[${FILE} -> ${FUNC}] ⚠️ Broken path at key "${key}". Current:`, current)
+      logDebug.warn(`⚠️ Broken path at key "${key}". Current: ${String(current)}`, ctx)
+      logDebug.stopTimer('getValueFromPath', ctx)
       return ''
     }
     current = (current as Record<string, unknown>)[key]
   }
 
-  const end = performance.now()
-  console.log(
-    `[${FILE} -> ${FUNC}] Completed in ${(end - start).toFixed(
-      2
-    )}ms | Retrieved: ${String(current)}`
-  )
-  return typeof current === 'string' ? current : ''
+  const result = typeof current === 'string' ? current : ''
+  logDebug.info(`Retrieved value for path "${path}": ${String(result)}`, ctx)
+  logDebug.stopTimer('getValueFromPath', ctx)
+  return result
 }
 
 /**
@@ -69,8 +69,9 @@ function replaceBindings(
     makeup_artists: Record<string, string | null>
   }
 ): string {
-  const FUNC = 'replaceBindings'
-  const start = performance.now()
+  const FN = 'replaceBindings'
+  const ctx = { file: FILE, fn: FN }
+  logDebug.startTimer('replaceBindings', ctx)
 
   const result = template.replace(/\{\{(.*?)\}\}/g, (_, rawPath) => {
     const [source, field] = rawPath.trim().split('.')
@@ -79,12 +80,8 @@ function replaceBindings(
     return value ? String(value) : ''
   })
 
-  const end = performance.now()
-  console.log(
-    `[${FILE} -> ${FUNC}] Processed bindings in ${(end - start).toFixed(
-      2
-    )}ms | Result: ${result}`
-  )
+  logDebug.info(`Processed bindings result: ${result}`, ctx)
+  logDebug.stopTimer('replaceBindings', ctx)
   return result
 }
 
@@ -92,20 +89,20 @@ function replaceBindings(
  * Converts a combined user + artist profile into a record of string/null values.
  */
 function toRecord(profile: UserProfile & Partial<MakeupArtist>): Record<string, string | null> {
-  const FUNC = 'toRecord'
-  const start = performance.now()
+  const FN = 'toRecord'
+  const ctx = { file: FILE, fn: FN }
+  logDebug.startTimer('toRecord', ctx)
 
   const record: Record<string, string | null> = {}
   Object.entries(profile).forEach(([key, val]) => {
     record[key] = typeof val === 'string' ? val : val ?? null
   })
 
-  const end = performance.now()
-  console.log(
-    `[${FILE} -> ${FUNC}] Converted profile to record with ${
-      Object.keys(record).length
-    } fields in ${(end - start).toFixed(2)}ms`
+  logDebug.info(
+    `Converted profile to record with ${Object.keys(record).length} fields`,
+    ctx
   )
+  logDebug.stopTimer('toRecord', ctx)
   return record
 }
 
@@ -119,23 +116,23 @@ export async function renderTemplateToCanvas(
   imageElements: ImageElement[],
   artistProfile: UserProfile & Partial<MakeupArtist>,
   preloadedBackground?: HTMLImageElement | null,
-  preloadedProfileImage?: HTMLImageElement | null  
+  preloadedProfileImage?: HTMLImageElement | null
 ): Promise<HTMLCanvasElement> {
-  const FUNC = 'renderTemplateToCanvas'
-  const renderStart = performance.now()
-  console.log(
-    `[${FILE} -> ${FUNC}] Rendering started at: ${renderStart.toFixed(
-      2
-    )}ms | Template ID: ${template.id}`
-  )
+  const FN = 'renderTemplateToCanvas'
+  const ctxLog = { file: FILE, fn: FN }
+
+  logDebug.startTimer('renderTemplateToCanvas', ctxLog)
+  logDebug.info(`Rendering started | Template ID: ${template.id}`, ctxLog)
 
   const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Canvas rendering context not available')
+  if (!ctx) {
+    logDebug.error('Canvas rendering context not available', ctxLog)
+    throw new Error('Canvas rendering context not available')
+  }
 
   // ---------- Step 1: Draw Background ----------
-  const bgStart = performance.now()
-
-  // ⭐ NEW: If provided → use preloaded image, else load normally
+  logDebug.startTimer('backgroundDraw', ctxLog)
+  // Use preloaded background if provided
   const background = preloadedBackground
     ? preloadedBackground
     : await loadImage(template.background_img_url || '')
@@ -144,13 +141,11 @@ export async function renderTemplateToCanvas(
   canvas.height = background.naturalHeight
 
   ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
-
-  const bgEnd = performance.now()
-  console.log(
-    `[${FILE} -> ${FUNC}] 🖼️ Background drawn in ${(bgEnd - bgStart).toFixed(
-      2
-    )}ms | URL: ${template.background_img_url} | Preloaded Used: ${!!preloadedBackground}`  // ⭐ NEW (no change to structure)
+  logDebug.info(
+    `Background drawn | URL: ${template.background_img_url} | Preloaded Used: ${!!preloadedBackground}`,
+    ctxLog
   )
+  logDebug.stopTimer('backgroundDraw', ctxLog)
 
   const userData = toRecord(artistProfile)
   const dataMap = {
@@ -158,69 +153,66 @@ export async function renderTemplateToCanvas(
     makeup_artists: userData,
   }
 
-// ---------- Step 2: Image Elements ----------
-const imagesStart = performance.now()
+  // ---------- Step 2: Image Elements ----------
+  logDebug.startTimer('imageBlock', ctxLog)
 
-for (const imgEl of imageElements) {
-  const imgStart = performance.now()
-  try {
-    let imageUrl = imgEl.image_url
-    let usingProfileProp = false
+  for (let i = 0; i < imageElements.length; i++) {
+    const imgEl = imageElements[i]
+    const imgTimerLabel = `image_${i}`
+    logDebug.startTimer(imgTimerLabel, ctxLog)
 
-    // Check if the image element has a binding config
-    if (Array.isArray(imgEl.binding_config) && imgEl.binding_config.length > 0) {
-      const binding = imgEl.binding_config[0] as BindingConfig
-      const boundUrl = getValueFromPath(dataMap[binding.source], binding.field)
+    try {
+      let imageUrl = imgEl.image_url
+      let usingProfileProp = false
 
-      // ⭐ Use provided preloadedProfileImage prop if field matches "profile_photo_url"
-      if (preloadedProfileImage && binding.field === 'profile_photo_url') {
-        ctx.drawImage(preloadedProfileImage, imgEl.x, imgEl.y, imgEl.width, imgEl.height)
-        usingProfileProp = true
-        const imgEnd = performance.now()
-        console.log(
-          `[${FILE} -> ${FUNC}] 🧩 Profile image drawn from prop in ${(imgEnd - imgStart).toFixed(
-            2
-          )}ms | Field: ${binding.field}`
-        )
-        continue
+      // Check if the image element has a binding config
+      if (Array.isArray(imgEl.binding_config) && imgEl.binding_config.length > 0) {
+        const binding = imgEl.binding_config[0] as BindingConfig
+        const boundUrl = getValueFromPath(dataMap[binding.source], binding.field)
+
+        // Use provided preloadedProfileImage prop if field matches "profile_photo_url"
+        if (preloadedProfileImage && binding.field === 'profile_photo_url') {
+          ctx.drawImage(preloadedProfileImage, imgEl.x, imgEl.y, imgEl.width, imgEl.height)
+          usingProfileProp = true
+          logDebug.info(
+            `Profile image drawn from prop | Field: ${binding.field}`,
+            ctxLog
+          )
+          logDebug.stopTimer(imgTimerLabel, ctxLog)
+          continue
+        }
+
+        // Fallback to Supabase-bound URL if exists
+        if (boundUrl) {
+          imageUrl = boundUrl
+        }
       }
 
-      // Fallback to Supabase-bound URL if exists
-      if (boundUrl) {
-        imageUrl = boundUrl
-      }
+      // Load the image and draw on canvas
+      const img = await loadImage(imageUrl)
+      ctx.drawImage(img, imgEl.x, imgEl.y, imgEl.width, imgEl.height)
+
+      logDebug.info(
+        `Image drawn | URL: ${imageUrl} ${usingProfileProp ? '(used preloadedProfileImage prop)' : ''}`,
+        ctxLog
+      )
+    } catch (err) {
+      logDebug.warn(`Failed to load image element: ${imgEl.image_url} — ${String(err)}`, ctxLog)
+    } finally {
+      logDebug.stopTimer(imgTimerLabel, ctxLog)
     }
-
-    // Load the image and draw on canvas
-    const img = await loadImage(imageUrl)
-    ctx.drawImage(img, imgEl.x, imgEl.y, imgEl.width, imgEl.height)
-
-    const imgEnd = performance.now()
-    console.log(
-      `[${FILE} -> ${FUNC}] 🧩 Image drawn in ${(imgEnd - imgStart).toFixed(
-        2
-      )}ms | URL: ${imageUrl} ${usingProfileProp ? '(used preloadedProfileImage prop)' : ''}`
-    )
-  } catch (err) {
-    console.warn(
-      `[${FILE} -> ${FUNC}] ⚠️ Failed to load image element: ${imgEl.image_url}`,
-      err
-    )
   }
-}
 
-const imagesEnd = performance.now()
-console.log(
-  `[${FILE} -> ${FUNC}] Image block complete in ${(imagesEnd - imagesStart).toFixed(2)}ms`
-)
-
+  logDebug.stopTimer('imageBlock', ctxLog)
 
   // ---------- Step 3: Text Elements ----------
-  const textStart = performance.now()
-  for (const txtEl of textElements) {
-    const txtBlockStart = performance.now()
+  logDebug.startTimer('textBlock', ctxLog)
+  for (let tIndex = 0; tIndex < textElements.length; tIndex++) {
+    const txtEl = textElements[tIndex]
+    const txtTimerLabel = `text_${tIndex}`
+    logDebug.startTimer(txtTimerLabel, ctxLog)
 
-    console.log(`[${FILE} -> ${FUNC}] Processing text element:`, txtEl)
+    logDebug.info(`Processing text element: index=${tIndex}`, ctxLog)
 
     const {
       x,
@@ -276,10 +268,8 @@ console.log(
       }
       textTemplate = lines.join('\n')
     } else {
-      console.warn(
-        `[${FILE} -> ${FUNC}] ⚠️ Unrecognized binding_config format:`,
-        binding_config
-      )
+      logDebug.warn('Unrecognized binding_config format', ctxLog)
+      logDebug.stopTimer(txtTimerLabel, ctxLog)
       continue
     }
 
@@ -329,21 +319,14 @@ console.log(
 
     ctx.restore()
 
-    const txtBlockEnd = performance.now()
-    console.log(
-      `[${FILE} -> ${FUNC}] ✏️ Text drawn in ${(txtBlockEnd - txtBlockStart).toFixed(
-        2
-      )}ms | Value: "${resolvedText}"`
-    )
+    logDebug.info(`Text drawn | Value: "${resolvedText}"`, ctxLog)
+    logDebug.stopTimer(txtTimerLabel, ctxLog)
   }
-  const textEnd = performance.now()
+  logDebug.stopTimer('textBlock', ctxLog)
 
-  console.log(`[${FILE} -> ${FUNC}] Text block complete in ${(textEnd - textStart).toFixed(2)}ms`)
-
-  const renderEnd = performance.now()
-  console.log(
-    `[${FILE} -> ${FUNC}] ✅ Rendering complete in ${(renderEnd - renderStart).toFixed(2)}ms`
-  )
+  logDebug.info('Text block complete', ctxLog)
+  logDebug.stopTimer('renderTemplateToCanvas', ctxLog)
+  logDebug.info('✅ Rendering complete', ctxLog)
 
   return canvas
 }

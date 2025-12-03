@@ -1,23 +1,24 @@
 // =======================================
 // lib/generation/uploadGeneratedCard.ts
-// Uploads rendered ID card to Cloudinary & saves URL in Supabase
+// Uploads rendered ID card → Cloudinary → saves URL in Supabase
 // ---------------------------------------
 // - Converts <canvas> → File
-// - Uploads file to Cloudinary (via API route or SDK)
-// - Updates artist record with returned image URL
+// - Uploads file to Cloudinary
+// - Updates artist record with the generated image URL
 // =======================================
 
 import { canvasToFile } from '@/modules/template_generation/canvasUtils'
 import { CloudinaryService } from '@/lib/cloudinaryService'
 import { supabase } from '@/lib/supabaseClient'
+import { logDebug } from '@/utils/Debugger'
 
 /**
- * Converts a rendered canvas into an image, uploads it to Cloudinary,
- * and stores the resulting public URL in the artist's Supabase record.
+ * Converts a rendered canvas into a JPEG file, uploads it to Cloudinary,
+ * then stores the returned public URL inside Supabase under the artist record.
  *
- * @param canvas - HTMLCanvasElement containing the rendered ID card
- * @param artistId - ID of the makeup artist record to update
- * @returns The public Cloudinary image URL
+ * @param canvas - Rendered HTMLCanvasElement containing the ID card
+ * @param artistId - Database ID of the makeup artist record to update
+ * @returns Public Cloudinary URL of the uploaded image
  */
 export async function uploadGeneratedCard(
   canvas: HTMLCanvasElement,
@@ -26,60 +27,68 @@ export async function uploadGeneratedCard(
   const FILE = 'lib/generation/uploadGeneratedCard.ts'
   const FUNC = 'uploadGeneratedCard'
 
-  const totalStart = performance.now()
-  console.log(`[${FILE} -> ${FUNC}] Starting upload for artist ID: ${artistId}`)
+  // Start total timer for the whole process
+  logDebug.startTimer('uploadGeneratedCard_total', { file: FILE, fn: FUNC })
+  logDebug.info(`Starting upload for artist ID: ${artistId}`, { file: FILE, fn: FUNC })
 
   try {
-    // Step 1: Convert canvas to File
-    const convertStart = performance.now()
-    console.log(`[${FILE} -> ${FUNC}] Converting canvas to file...`)
+    // ------------------------------------------------------------
+    // STEP 1 — Convert Canvas → File
+    // ------------------------------------------------------------
+    logDebug.startTimer('convertCanvas', { file: FILE, fn: FUNC })
+    logDebug.info('Converting canvas to file...', { file: FILE, fn: FUNC })
+
     const file = await canvasToFile(canvas, `id_card_${artistId}.jpg`, 0.9)
-    const convertEnd = performance.now()
-    console.log(
-      `[${FILE} -> ${FUNC}] Canvas converted to file (${file.name}) in ${(convertEnd - convertStart).toFixed(2)}ms`
-    )
 
-    // Step 2: Upload to Cloudinary (folder: id_cards)
-    const uploadStart = performance.now()
-    console.log(`[${FILE} -> ${FUNC}] Uploading file to Cloudinary...`)
+    logDebug.stopTimer('convertCanvas', { file: FILE, fn: FUNC })
+    logDebug.info(`Canvas converted to file (${file.name})`, { file: FILE, fn: FUNC })
+
+    // ------------------------------------------------------------
+    // STEP 2 — Upload to Cloudinary
+    // ------------------------------------------------------------
+    logDebug.startTimer('cloudinaryUpload', { file: FILE, fn: FUNC })
+    logDebug.info('Uploading file to Cloudinary...', { file: FILE, fn: FUNC })
+
     const url = await CloudinaryService.upload(file, 'id_cards')
-    const uploadEnd = performance.now()
-    console.log(
-      `[${FILE} -> ${FUNC}] File uploaded to Cloudinary in ${(uploadEnd - uploadStart).toFixed(2)}ms: ${url}`
-    )
 
-    // Step 3: Save URL in Supabase table
-    const supabaseStart = performance.now()
-    console.log(`[${FILE} -> ${FUNC}] Saving Cloudinary URL to Supabase...`)
+    logDebug.stopTimer('cloudinaryUpload', { file: FILE, fn: FUNC })
+    logDebug.info(`File uploaded to Cloudinary: ${url}`, { file: FILE, fn: FUNC })
+
+    // ------------------------------------------------------------
+    // STEP 3 — Update Supabase record
+    // ------------------------------------------------------------
+    logDebug.startTimer('supabaseUpdate', { file: FILE, fn: FUNC })
+    logDebug.info('Saving Cloudinary URL to Supabase...', { file: FILE, fn: FUNC })
+
     const { error } = await supabase
       .from('makeup_artists')
       .update({ idcard_url: url })
       .eq('id', artistId)
 
-    const supabaseEnd = performance.now()
-    console.log(
-      `[${FILE} -> ${FUNC}] Supabase update completed in ${(supabaseEnd - supabaseStart).toFixed(2)}ms`
-    )
+    logDebug.stopTimer('supabaseUpdate', { file: FILE, fn: FUNC })
 
     if (error) {
-      console.error(`[${FILE} -> ${FUNC}] ❌ Supabase update failed:`, error.message)
+      logDebug.error(`Supabase update failed: ${error.message}`, { file: FILE, fn: FUNC })
       throw new Error(`Failed to update Supabase: ${error.message}`)
     }
 
-    const totalEnd = performance.now()
-    console.log(
-      `[${FILE} -> ${FUNC}] ✅ Total time: ${(totalEnd - totalStart).toFixed(2)}ms — ID card uploaded and saved successfully: ${url}`
-    )
+    // ------------------------------------------------------------
+    // STEP 4 — Complete total process
+    // ------------------------------------------------------------
+    logDebug.stopTimer('uploadGeneratedCard_total', { file: FILE, fn: FUNC })
+    logDebug.info(`ID card uploaded and saved successfully: ${url}`, {
+      file: FILE,
+      fn: FUNC,
+    })
 
     return url
   } catch (err) {
-    const totalEnd = performance.now()
-    console.error(
-      `[${FILE} -> ${FUNC}] ⚠️ Upload process failed after ${(totalEnd - totalStart).toFixed(
-        2
-      )}ms:`,
-      err
-    )
+    // Stop timer on failure
+    logDebug.stopTimer('uploadGeneratedCard_total', { file: FILE, fn: FUNC })
+
+    logDebug.error('Upload process failed:', { file: FILE, fn: FUNC })
+    logDebug.error(err, { file: FILE, fn: FUNC })
+
     throw err
   }
 }

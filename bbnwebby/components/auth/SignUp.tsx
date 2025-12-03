@@ -3,6 +3,7 @@
 import React, { useState, ChangeEvent, FormEvent, JSX } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { CloudinaryService } from '@/lib/cloudinaryService';
+import { logDebug } from '@/utils/Debugger';
 
 /**
  * MakeupArtistSignUpForm
@@ -18,14 +19,14 @@ interface Message {
 
 export default function MakeupArtistSignUpForm(): JSX.Element {
   // ==================== Form fields ====================
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [fullName, setFullName] = useState<string>('');
-  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
-  const [city, setCity] = useState<string>('');
-  const [organisation, setOrganisation] = useState<string>('');
-  const [designation, setDesignation] = useState<string>('');
-  const [instagramHandle, setInstagramHandle] = useState<string>('');
+  const [email, setEmail] = useState<string>('bbnwebby@gmail.com');
+  const [password, setPassword] = useState<string>('password');
+  const [fullName, setFullName] = useState<string>('joe k');
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('91919191919');
+  const [city, setCity] = useState<string>('hyderabad');
+  const [organisation, setOrganisation] = useState<string>('beyond beauty network');
+  const [designation, setDesignation] = useState<string>('webdev');
+  const [instagramHandle, setInstagramHandle] = useState<string>('insta weeb');
 
   // ==================== Files ====================
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
@@ -56,19 +57,24 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
     }
   };
 
-  // ==================== Submit Handler ====================
+// ==================== Submit Handler ====================
 const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
   e.preventDefault();
-  console.clear();
-  console.group('📝 MAKEUP ARTIST REGISTRATION START');
+
+  const FILE = "SignUp.tsx";
+  const FUNC = "handleSubmit";
+  logDebug.startTimer("handleSubmit_called", { file: FILE, fn: FUNC });
+
+  // Reset UI & start debug logs
+  logDebug.info("📝 MAKEUP ARTIST REGISTRATION START", { file: FILE, fn: FUNC });
   setMessage(null);
   setLoading(true);
 
-  const FILE = 'SignUp.tsx';
-  const FUNC = 'handleSubmit';
-
-  // Utility: convert image File/Blob → JPEG File
+  // ========== Utility: Convert File/Blob → JPEG File ==========
   const convertToJpeg = async (file: File | Blob, quality = 0.9): Promise<File> => {
+    logDebug.startTimer("convertToJpeg", { file: FILE, fn: FUNC });
+
+    // Load file as <img>
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.onload = () => resolve(image);
@@ -76,70 +82,105 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
       image.src = URL.createObjectURL(file);
     });
 
-    const canvas = document.createElement('canvas');
+    // Draw into canvas
+    const canvas = document.createElement("canvas");
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext('2d')!;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas not supported");
+
     ctx.drawImage(img, 0, 0);
 
-    return await new Promise<File>((resolve) => {
+    // Convert to JPEG blob
+    const jpegFile = await new Promise<File>((resolve) => {
       canvas.toBlob(
         (blob) => {
-          if (!blob) throw new Error('JPEG conversion failed');
-          resolve(new File([blob], file instanceof File ? file.name.replace(/\.\w+$/, '.jpg') : 'converted.jpg', { type: 'image/jpeg' }));
+          if (!blob) throw new Error("JPEG conversion failed");
+          const name =
+            file instanceof File ? file.name.replace(/\.\w+$/, ".jpg") : "converted.jpg";
+          resolve(new File([blob], name, { type: "image/jpeg" }));
         },
-        'image/jpeg',
+        "image/jpeg",
         quality
       );
     });
+
+    logDebug.stopTimer("convertToJpeg", { file: FILE, fn: FUNC });
+    logDebug.info("JPEG conversion complete", { file: FILE, fn: FUNC });
+
+    return jpegFile;
   };
 
   try {
+    // ======================================================
     // 1️⃣ Upload files in parallel
-    console.log(`[${FILE} -> ${FUNC}] 📤 Uploading files in parallel...`);
-    const t1 = performance.now();
+    // ======================================================
+    logDebug.startTimer("parallelUploads", { file: FILE, fn: FUNC });
+    logDebug.info("Uploading files in parallel...", { file: FILE, fn: FUNC });
 
     const [profileImageUrl, logoUrl, portfolioPdfUrl] = await Promise.all([
       profileImageFile
-        ? convertToJpeg(profileImageFile).then((file) => CloudinaryService.upload(file, 'profile_images'))
+        ? convertToJpeg(profileImageFile).then((file) =>
+            CloudinaryService.upload(file, "profile_images")
+          )
         : Promise.resolve(null),
+
       logoFile
-        ? convertToJpeg(logoFile).then((file) => CloudinaryService.upload(file, 'logos'))
+        ? convertToJpeg(logoFile).then((file) =>
+            CloudinaryService.upload(file, "logos")
+          )
         : Promise.resolve(null),
+
       portfolioPdfFile
-        ? CloudinaryService.upload(portfolioPdfFile, 'portfolios')
+        ? CloudinaryService.upload(portfolioPdfFile, "portfolios")
         : Promise.resolve(null),
     ]);
 
-    console.log(`[${FILE} -> ${FUNC}] ✅ All uploads complete in ${(performance.now() - t1).toFixed(1)}ms`, {
-      profileImageUrl,
-      logoUrl,
-      portfolioPdfUrl,
-    });
+    logDebug.stopTimer("parallelUploads", { file: FILE, fn: FUNC });
+    logDebug.info(
+      {
+        message: "Uploads completed",
+        profileImageUrl,
+        logoUrl,
+        portfolioPdfUrl,
+      },
+      { file: FILE, fn: FUNC }
+    );
 
+    // ======================================================
     // 2️⃣ Create Supabase Auth user
-    console.log(`[${FILE} -> ${FUNC}] 👤 Creating Supabase Auth user...`);
-    const t2 = performance.now();
+    // ======================================================
+    logDebug.startTimer("authSignup", { file: FILE, fn: FUNC });
+    logDebug.info("Creating Supabase Auth user...", { file: FILE, fn: FUNC });
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ Auth signup took ${(performance.now() - t2).toFixed(1)}ms`);
+
+    logDebug.stopTimer("authSignup", { file: FILE, fn: FUNC });
 
     if (authError) throw new Error(authError.message);
+
     const user = authData.user;
     if (!user) {
-      setMessage({ type: 'success', text: 'Registration successful! Please verify your email.' });
+      setMessage({
+        type: "success",
+        text: "Registration successful! Please verify your email.",
+      });
       setLoading(false);
-      console.groupEnd();
       return;
     }
 
+    // ======================================================
     // 3️⃣ Insert into user_profiles
-    console.log(`[${FILE} -> ${FUNC}] 🗂️ Inserting new record into user_profiles...`);
-    const t3 = performance.now();
-    const { error: profileError } = await supabase.from('user_profiles').insert([
+    // ======================================================
+    logDebug.startTimer("insert_user_profiles", { file: FILE, fn: FUNC });
+    logDebug.info("Inserting into user_profiles...", { file: FILE, fn: FUNC });
+
+    const { error: profileError } = await supabase.from("user_profiles").insert([
       {
         auth_user_id: user.id,
         full_name: fullName,
@@ -148,32 +189,47 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         profile_photo_url: profileImageUrl || null,
       },
     ]);
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ user_profiles insert took ${(performance.now() - t3).toFixed(1)}ms`);
 
+    logDebug.stopTimer("insert_user_profiles", { file: FILE, fn: FUNC });
     if (profileError) throw new Error(`Profile creation failed: ${profileError.message}`);
 
+    // ======================================================
     // 4️⃣ Fetch profile ID
-    console.log(`[${FILE} -> ${FUNC}] 🔍 Fetching created user_profile ID...`);
-    const t4 = performance.now();
+    // ======================================================
+    logDebug.startTimer("fetch_profile_id", { file: FILE, fn: FUNC });
+    logDebug.info("Fetching user_profile ID...", { file: FILE, fn: FUNC });
+
     const { data: profileData, error: fetchError } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('auth_user_id', user.id)
+      .from("user_profiles")
+      .select("id")
+      .eq("auth_user_id", user.id)
       .single();
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ Fetch profile ID took ${(performance.now() - t4).toFixed(1)}ms`);
 
-    if (fetchError || !profileData) throw new Error('Unable to retrieve user profile.');
-    console.log(`[${FILE} -> ${FUNC}] ✅ Profile ID: ${profileData.id}`);
+    logDebug.stopTimer("fetch_profile_id", { file: FILE, fn: FUNC });
 
+    if (fetchError || !profileData) throw new Error("Unable to retrieve profile ID");
+
+    logDebug.info(`Profile ID: ${profileData.id}`, { file: FILE, fn: FUNC });
+
+    // ======================================================
     // 5️⃣ Build username
-    const clean = (s: string) => s?.trim().replace(/\s+/g, '_').toLowerCase() || 'unknown';
-    const username = `${clean(fullName)}@${clean(designation)}@${clean(organisation)}@${clean(city)}`;
-    console.log(`[${FILE} -> ${FUNC}] 👤 Generated username: ${username}`);
+    // ======================================================
+    const clean = (s: string) =>
+      s?.trim().replace(/\s+/g, "_").toLowerCase() || "unknown";
 
+    const username = `${clean(fullName)}@${clean(designation)}@${clean(
+      organisation
+    )}@${clean(city)}`;
+
+    logDebug.info(`Generated username: ${username}`, { file: FILE, fn: FUNC });
+
+    // ======================================================
     // 6️⃣ Insert into makeup_artists
-    console.log(`[${FILE} -> ${FUNC}] 💄 Inserting artist record...`);
-    const t5 = performance.now();
-    const { error: artistError } = await supabase.from('makeup_artists').insert([
+    // ======================================================
+    logDebug.startTimer("insert_makeup_artists", { file: FILE, fn: FUNC });
+    logDebug.info("Inserting into makeup_artists...", { file: FILE, fn: FUNC });
+
+    const { error: artistError } = await supabase.from("makeup_artists").insert([
       {
         user_profile_id: profileData.id,
         organisation: organisation || null,
@@ -182,36 +238,54 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         username,
         portfolio_pdf_url: portfolioPdfUrl || null,
         logo_url: logoUrl || null,
-        status: 'pending',
+        status: "pending",
       },
     ]);
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ Artist insert took ${(performance.now() - t5).toFixed(1)}ms`);
+
+    logDebug.stopTimer("insert_makeup_artists", { file: FILE, fn: FUNC });
     if (artistError) throw new Error(`Artist save failed: ${artistError.message}`);
 
+    // ======================================================
     // 7️⃣ Fetch artist ID
-    const { data: artistData, error: fetchArtistError } = await supabase
-      .from('makeup_artists')
-      .select('id')
-      .eq('user_profile_id', profileData.id)
-      .single();
-    if (fetchArtistError || !artistData) throw new Error('Failed to fetch artist record.');
-    const artistId: string = artistData.id;
-    console.log(`[${FILE} -> ${FUNC}] 🎨 Artist ID: ${artistId}`);
+    // ======================================================
+    logDebug.info("Fetching artist ID...", { file: FILE, fn: FUNC });
 
-    // 8️⃣ Generate & upload ID card
+    const { data: artistData, error: fetchArtistError } = await supabase
+      .from("makeup_artists")
+      .select("id")
+      .eq("user_profile_id", profileData.id)
+      .single();
+
+    if (fetchArtistError || !artistData)
+      throw new Error("Failed to fetch artist record");
+
+    const artistId: string = artistData.id;
+
+    logDebug.info(`Artist ID: ${artistId}`, { file: FILE, fn: FUNC });
+
+    // ======================================================
+    // 8️⃣ Generate & Upload ID Card
+    // ======================================================
     try {
-      console.log(`[${FILE} -> ${FUNC}] 🪪 Generating artist ID card...`);
-      const templateId = 'e4b514f3-28df-4bde-a0fe-0ca9b47c9250';
+      logDebug.startTimer("id_card_generation", { file: FILE, fn: FUNC });
+      logDebug.info("Generating ID Card...", { file: FILE, fn: FUNC });
+
+      const templateId = "e4b514f3-28df-4bde-a0fe-0ca9b47c9250";
+
       const bgImage = new Image();
-      bgImage.src = '/images/templates/base_id_bg.jpg';
+      bgImage.src = "/images/templates/base_id_bg.jpg";
+
       await new Promise<void>((resolve, reject) => {
         bgImage.onload = () => resolve();
         bgImage.onerror = () => reject();
       });
 
-      const { generateTemplateImage } = await import('@/modules/template_generation/generateTemplateImage');
+      const { generateTemplateImage } = await import(
+        "@/modules/template_generation/generateTemplateImage"
+      );
 
       let profileImageHtml: HTMLImageElement | null = null;
+
       if (profileImageFile) {
         profileImageHtml = await new Promise<HTMLImageElement>((resolve, reject) => {
           const img = new Image();
@@ -221,35 +295,49 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         });
       }
 
-      const tCard = performance.now();
-      const cardUrl: string = await generateTemplateImage('id_card', templateId, artistId, bgImage, profileImageHtml);
-      console.log(`[${FILE} -> ${FUNC}] ⏱️ ID card generation took ${(performance.now() - tCard).toFixed(1)}ms`);
-      console.log(`[${FILE} -> ${FUNC}] ✅ ID Card uploaded: ${cardUrl}`);
+      const cardUrl: string = await generateTemplateImage(
+        "id_card",
+        templateId,
+        artistId,
+        bgImage,
+        profileImageHtml
+      );
 
-      const tUpdateCard = performance.now();
+      logDebug.stopTimer("id_card_generation", { file: FILE, fn: FUNC });
+      logDebug.info("ID card generated & uploaded", { file: FILE, fn: FUNC });
+
+      // Save card URL
+      logDebug.startTimer("update_idcard_url", { file: FILE, fn: FUNC });
+
       const { error: updateError } = await supabase
-        .from('makeup_artists')
+        .from("makeup_artists")
         .update({ idcard_url: cardUrl })
-        .eq('id', artistId);
-      console.log(`[${FILE} -> ${FUNC}] ⏱️ Saving ID card URL took ${(performance.now() - tUpdateCard).toFixed(1)}ms`);
-      if (updateError) throw new Error(`Failed to save ID card URL: ${updateError.message}`);
-      console.log(`[${FILE} -> ${FUNC}] 💾 ID card URL saved successfully.`);
+        .eq("id", artistId);
+
+      logDebug.stopTimer("update_idcard_url", { file: FILE, fn: FUNC });
+
+      if (updateError)
+        throw new Error(`Failed to save card URL: ${updateError.message}`);
+
+      logDebug.info("ID card URL saved successfully", { file: FILE, fn: FUNC });
     } catch (cardError) {
-      console.error(`[${FILE} -> ${FUNC}] ❌ Failed to generate/save ID card:`, cardError);
+      logDebug.error("Failed to generate/save ID card", { file: FILE, fn: FUNC });
+      logDebug.error(cardError, { file: FILE, fn: FUNC });
     }
 
+    // ======================================================
     // 9️⃣ Reset form
-    console.log(`[${FILE} -> ${FUNC}] 🧹 Resetting form...`);
+    // ======================================================
+    logDebug.info("Resetting form...", { file: FILE, fn: FUNC });
     resetForm();
-    console.groupEnd();
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unexpected error occurred';
-    console.error(`[${FILE} -> ${FUNC}] ❌ Registration Error:`, msg);
-    setMessage({ type: 'error', text: msg });
-    console.groupEnd();
+    const msg = err instanceof Error ? err.message : "Unexpected error occurred";
+    logDebug.error(`Registration Error: ${msg}`, { file: FILE, fn: FUNC });
+    setMessage({ type: "error", text: msg });
   } finally {
     setLoading(false);
   }
+  logDebug.stopTimer("handleSubmit_called", { file: FILE, fn: FUNC });
 };
 
   /** Reset the form cleanly after success */

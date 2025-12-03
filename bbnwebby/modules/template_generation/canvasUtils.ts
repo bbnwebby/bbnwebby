@@ -1,44 +1,40 @@
 // =======================================
 // lib/generation/canvasUtils.ts
-// Canvas Manipulation Utilities (Verbose Logging)
+// Canvas Manipulation Utilities (LogDebug Version)
 // -----------------------------------------------
-// - Every console log includes file + function name.
-// - Strict TypeScript compliance, no `any`.
+// - Every log uses logDebug.info / warn / error
+// - No raw console logs
+// - Strong TypeScript compliance
 // =======================================
 
-const FILE = 'canvasUtils.ts';
+import { logDebug } from '@/utils/Debugger';
+
+const FILE = 'lib/generation/canvasUtils.ts';
 
 /**
- * Loads an image from a given URL with full debug logs.
+ * Loads an image from a given URL with debug-wrapped logs.
  */
 export const loadImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
-    const startTime = performance.now();
-    console.log(`🖼️ [${FILE} -> loadImage] Loading image:`, url);
+    const FN = 'loadImage';
+    const ctx = { file: FILE, fn: FN };
+    logDebug.startTimer(FN, ctx);
+
+    logDebug.info(`🖼️ Loading image: ${url}`, ctx);
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
 
     img.onload = () => {
-      const endTime = performance.now();
-      console.log(
-        `✅ [${FILE} -> loadImage] Image loaded successfully in ${(endTime - startTime).toFixed(
-          2
-        )}ms:`,
-        url
-      );
+      logDebug.stopTimer(FN, ctx);
+      logDebug.info(`✅ Image loaded successfully: ${url}`, ctx);
       resolve(img);
     };
 
     img.onerror = (error) => {
-      const endTime = performance.now();
-      console.error(
-        `❌ [${FILE} -> loadImage] Failed to load image in ${(endTime - startTime).toFixed(
-          2
-        )}ms:`,
-        url,
-        error
-      );
+      logDebug.stopTimer(FN, ctx);
+      logDebug.error(`❌ Failed to load image: ${url}`, ctx);
+      logDebug.error(String(error), ctx);
       reject(error);
     };
 
@@ -46,8 +42,7 @@ export const loadImage = (url: string): Promise<HTMLImageElement> =>
   });
 
 /**
- * Converts a canvas element to a File object (JPEG).
- * Provides logs for conversion progress and errors.
+ * Converts a canvas element into a File object (JPEG format).
  */
 export const canvasToFile = (
   canvas: HTMLCanvasElement,
@@ -55,18 +50,20 @@ export const canvasToFile = (
   quality: number = 0.95
 ): Promise<File> =>
   new Promise((resolve, reject) => {
-    const startTime = performance.now();
-    console.log(`🧾 [${FILE} -> canvasToFile] Starting canvas-to-file conversion:`, filename);
+    const FN = 'canvasToFile';
+    const ctx = { file: FILE, fn: FN };
+    logDebug.startTimer(FN, ctx);
+
+    logDebug.info(`🧾 Starting canvas-to-file conversion: ${filename}`, ctx);
 
     canvas.toBlob(
       (blob) => {
-        const endTime = performance.now();
+        logDebug.stopTimer(FN, ctx);
 
         if (!blob) {
-          console.error(
-            `❌ [${FILE} -> canvasToFile] Conversion failed after ${(endTime - startTime).toFixed(
-              2
-            )}ms`
+          logDebug.error(
+            `❌ Conversion to Blob failed for "${filename}"`,
+            ctx
           );
           reject(new Error('Canvas conversion to Blob failed.'));
           return;
@@ -74,10 +71,9 @@ export const canvasToFile = (
 
         const file = new File([blob], filename, { type: 'image/jpeg' });
 
-        console.log(
-          `✅ [${FILE} -> canvasToFile] Successfully converted in ${(endTime - startTime).toFixed(
-            2
-          )}ms → ${file.name}, ${file.size} bytes`
+        logDebug.info(
+          `✅ Canvas converted → ${file.name} (${file.size} bytes)`,
+          ctx
         );
         resolve(file);
       },
@@ -87,162 +83,135 @@ export const canvasToFile = (
   });
 
 /**
- * Converts a canvas to a Base64 string for quick preview or inline use.
+ * Converts a canvas to a Base64 string.
  */
 export const canvasToBase64 = (
   canvas: HTMLCanvasElement,
   quality: number = 0.95
 ): string => {
-  const startTime = performance.now();
-  console.log(`🎨 [${FILE} -> canvasToBase64] Converting canvas to Base64...`);
+  const FN = 'canvasToBase64';
+  const ctx = { file: FILE, fn: FN };
+  logDebug.startTimer(FN, ctx);
+
+  logDebug.info('🎨 Converting canvas to Base64...', ctx);
 
   const dataUrl = canvas.toDataURL('image/jpeg', quality);
 
-  const endTime = performance.now();
-  console.log(
-    `✅ [${FILE} -> canvasToBase64] Base64 conversion complete in ${(endTime - startTime).toFixed(
-      2
-    )}ms. Length:`,
-    dataUrl.length
-  );
+  logDebug.stopTimer(FN, ctx);
+  logDebug.info(`✅ Base64 conversion complete. Length: ${dataUrl.length}`, ctx);
 
   return dataUrl;
 };
 
 /**
- * Draws multi-line text with wrapping inside a given bounding box.
- * Logs each line drawn and position details.
+ * Draws wrapped text inside a bounding box.
  */
 export const drawWrappedText = (
-  ctx: CanvasRenderingContext2D,
+  ctxCanvas: CanvasRenderingContext2D,
   text: string,
   x: number,
   y: number,
   maxWidth: number,
   lineHeight: number
 ): void => {
-  const startTime = performance.now();
-  console.log(`✏️ [${FILE} -> drawWrappedText] Drawing wrapped text:`, {
-    x,
-    y,
-    maxWidth,
-    lineHeight
-  });
+  const FN = 'drawWrappedText';
+  const ctx = { file: FILE, fn: FN };
+  logDebug.startTimer(FN, ctx);
+
+  logDebug.info('✏️ Drawing wrapped text', { file: FILE, fn: FN });
+  logDebug.info(`params: x=${x}, y=${y}, maxWidth=${maxWidth}, lineHeight=${lineHeight}`, ctx);
 
   const words = text.split(' ');
   let line = '';
   let currentY = y;
 
   for (const word of words) {
-    const testLine = `${line}${word} `;
-    const metrics = ctx.measureText(testLine);
+    const test = `${line}${word} `;
+    const metrics = ctxCanvas.measureText(test);
 
     if (metrics.width > maxWidth && line !== '') {
-      console.log(`➡️ [${FILE} -> drawWrappedText] New line due to width limit:`, currentY);
-      ctx.fillText(line.trim(), x, currentY);
+      logDebug.info(`➡️ New line due to width at y=${currentY}`, ctx);
+      ctxCanvas.fillText(line.trim(), x, currentY);
       line = `${word} `;
       currentY += lineHeight;
     } else {
-      line = testLine;
+      line = test;
     }
   }
 
-  ctx.fillText(line.trim(), x, currentY);
+  ctxCanvas.fillText(line.trim(), x, currentY);
 
-  const endTime = performance.now();
-  console.log(
-    `✅ [${FILE} -> drawWrappedText] Finished drawing wrapped text in ${(endTime - startTime).toFixed(
-      2
-    )}ms`
-  );
+  logDebug.stopTimer(FN, ctx);
+  logDebug.info(`✅ Wrapped text drawn`, ctx);
 };
 
 /**
- * Calculates text X-coordinate based on alignment type.
- * Logs the calculated value for verification.
+ * Computes X position based on alignment.
  */
 export const getAlignedX = (
-  ctx: CanvasRenderingContext2D,
+  ctxCanvas: CanvasRenderingContext2D,
   text: string,
   baseX: number,
   boxWidth: number,
   alignment: 'left' | 'center' | 'right'
 ): number => {
-  const startTime = performance.now();
+  const FN = 'getAlignedX';
+  const ctx = { file: FILE, fn: FN };
+  logDebug.startTimer(FN, ctx);
 
-  const textWidth = ctx.measureText(text).width;
-  let alignedX: number;
+  const textWidth = ctxCanvas.measureText(text).width;
+  let alignedX = baseX;
 
   switch (alignment) {
     case 'center':
       alignedX = baseX + (boxWidth - textWidth) / 2;
-      console.log(
-        `↔️ [${FILE} -> getAlignedX] Center alignment applied in ${(performance.now() - startTime).toFixed(
-          2
-        )}ms:`,
-        alignedX
-      );
       break;
-
     case 'right':
       alignedX = baseX + boxWidth - textWidth;
-      console.log(
-        `➡️ [${FILE} -> getAlignedX] Right alignment applied in ${(performance.now() - startTime).toFixed(
-          2
-        )}ms:`,
-        alignedX
-      );
       break;
-
     default:
       alignedX = baseX;
-      console.log(
-        `↩️ [${FILE} -> getAlignedX] Left alignment applied in ${(performance.now() - startTime).toFixed(
-          2
-        )}ms:`,
-        alignedX
-      );
   }
 
+  logDebug.stopTimer(FN, ctx);
+  logDebug.info(`↔️ Alignment computed: ${alignment} -> x=${alignedX}`, ctx);
   return alignedX;
 };
 
 /**
- * Replaces {{placeholders}} in text with actual runtime values.
- * Logs every replacement and warns for missing variables.
+ * Replaces {{placeholders}} in text.
  */
 export const replacePlaceholders = (
   text: string | null | undefined,
   replacements: Record<string, string>
 ): string => {
-  const startTime = performance.now();
-  console.log(`🧠 [${FILE} -> replacePlaceholders] Starting placeholder replacement...`);
+  const FN = 'replacePlaceholders';
+  const ctx = { file: FILE, fn: FN };
+  logDebug.startTimer(FN, ctx);
+
+  logDebug.info('🧠 Starting placeholder replacement', ctx);
 
   if (!text) {
-    console.warn(`⚠️ [${FILE} -> replacePlaceholders] Provided text is null or undefined.`);
+    logDebug.warn('⚠️ Provided text is null or undefined', ctx);
+    logDebug.stopTimer(FN, ctx);
     return '';
   }
 
   let result = text;
+
   for (const [key, value] of Object.entries(replacements)) {
     const pattern = new RegExp(`{{${key}}}`, 'g');
 
     if (!pattern.test(result)) {
-      console.warn(`⚠️ [${FILE} -> replacePlaceholders] Placeholder not found: {{${key}}}`);
+      logDebug.warn(`⚠️ Placeholder not found: {{${key}}}`, ctx);
     } else {
-      console.log(`🔁 [${FILE} -> replacePlaceholders] {{${key}}} → "${value}"`);
+      logDebug.info(`🔁 Replaced {{${key}}} → "${value}"`, ctx);
     }
 
     result = result.replace(pattern, value ?? '');
   }
 
-  const endTime = performance.now();
-  console.log(
-    `✅ [${FILE} -> replacePlaceholders] Replacement complete in ${(endTime - startTime).toFixed(
-      2
-    )}ms. Final text:`,
-    result
-  );
-
+  logDebug.stopTimer(FN, ctx);
+  logDebug.info('✅ Replacement complete', ctx);
   return result;
 };

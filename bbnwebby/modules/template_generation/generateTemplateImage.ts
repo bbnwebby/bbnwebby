@@ -14,20 +14,13 @@ import { renderTemplateToCanvas } from '@/modules/template_generation/renderTemp
 import { uploadGeneratedCard } from '@/modules/template_generation/uploadGeneratedCard'
 import { supabase } from '@/lib/supabaseClient'
 import type { UserProfile, MakeupArtist } from '@/types/types'
+import { logDebug } from '@/utils/Debugger'
+
+// 🔒 Constant file identifier
+const FILE = 'generateTemplateImage.ts'
 
 /**
  * End-to-end image generation and upload workflow.
- * ------------------------------------------------
- * Fetches a saved template layout, fills it with artist data,
- * renders it onto the given <canvas>, uploads the rendered
- * image to Cloudinary, updates Supabase, and returns the link.
- *
- * @param templateType - Template category (e.g. "id_card", "certificate")
- * @param templateId - Supabase template record ID
- * @param artistId - Associated makeup artist record ID
- * @param canvas - Target HTMLCanvasElement for rendering
- * @param preloadedBackground - ⭐ NEW: pre-fetched background image
- * @returns Promise<string> - Uploaded Cloudinary image URL
  */
 export async function generateTemplateImage(
   templateType: 'id_card' | 'certificate',
@@ -36,70 +29,62 @@ export async function generateTemplateImage(
   preloadedBackground?: HTMLImageElement | null,
   preloadedProfileImage?: HTMLImageElement | null
 ): Promise<string> {
-  const FILE = 'lib/generation/generateTemplateImage.ts'
-  const FUNC = 'generateTemplateImage'
 
-  const startOverall = performance.now()
-  console.log(`[${FILE} -> ${FUNC}] 🎨 Starting generation for template type: ${templateType}, ID: ${templateId}`)
+  // 🔒 Function identifier declared at start of each function
+  const FN = 'generateTemplateImage'
+  const ctx = { file: FILE, fn: FN }
+
+  logDebug.info(`🎨 Starting generation for template type: ${templateType}, ID: ${templateId}`, ctx)
 
   // create a temporary off-screen canvas for rendering
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement('canvas')
 
   if (preloadedBackground) {
-    // use the background image dimensions if provided
-    canvas.width = preloadedBackground.naturalWidth;
-    canvas.height = preloadedBackground.naturalHeight;
-    console.log(`🎨 Canvas size set from preloaded background: ${canvas.width}x${canvas.height}`);
+    canvas.width = preloadedBackground.naturalWidth
+    canvas.height = preloadedBackground.naturalHeight
+    logDebug.info(`🎨 Canvas size set from preloaded background: ${canvas.width}x${canvas.height}`, ctx)
   } else {
-    // fallback to default size if no background provided
-    canvas.width = 1000; // adjust according to template aspect ratio
-    canvas.height = 600;
-    console.log(`🎨 Canvas size set to default: ${canvas.width}x${canvas.height}`);
+    canvas.width = 1000
+    canvas.height = 600
+    logDebug.info(`🎨 Canvas size set to default: ${canvas.width}x${canvas.height}`, ctx)
   }
-
 
   try {
     // 1️⃣ Fetch artist and linked user profile
-    const t1 = performance.now()
-    console.log(`[${FILE} -> ${FUNC}] Fetching artist and user profile for artist ID: ${artistId}`)
+    logDebug.startTimer('artistFetch', ctx)
     const { data: artist, error: artistError } = await supabase
       .from('makeup_artists')
       .select('*, user_profiles(*)')
       .eq('id', artistId)
       .single()
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ Artist fetch took ${(performance.now() - t1).toFixed(1)}ms`)
+    logDebug.stopTimer('artistFetch', ctx)
 
     if (artistError || !artist) {
-      console.error(`[${FILE} -> ${FUNC}] ❌ Failed to fetch artist:`, artistError)
+      logDebug.error('❌ Failed to fetch artist:', ctx)
       throw new Error(artistError?.message || 'Artist not found in database.')
     }
 
     const userProfile: UserProfile = artist.user_profiles
     const artistProfile: MakeupArtist = { ...artist, user_profile_id: artist.user_profile_id }
-    console.log(`[${FILE} -> ${FUNC}] ✅ Artist and user profile fetched successfully.`)
+    logDebug.info('✅ Artist and user profile fetched successfully.', ctx)
 
     // 2️⃣ Fetch template and its elements
-    const t2 = performance.now()
-    console.log(`[${FILE} -> ${FUNC}] Fetching template and elements for template ID: ${templateId}`)
+    logDebug.startTimer('templateFetch', ctx)
     const { template, textElements, imageElements } = await fetchTemplateDataById(templateType, templateId)
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ Template fetch took ${(performance.now() - t2).toFixed(1)}ms`)
+    logDebug.stopTimer('templateFetch', ctx)
 
-    if (!template) {
-      throw new Error(`Template not found for ID: ${templateId}`)
-    }
+    if (!template) throw new Error(`Template not found for ID: ${templateId}`)
+    logDebug.info('✅ Template and elements fetched successfully.', ctx)
 
-    console.log(`[${FILE} -> ${FUNC}] ✅ Template and elements fetched successfully.`)
-
-    // 3️⃣ Merge artist and user data (with correct types)
-    console.log(`[${FILE} -> ${FUNC}] Merging artist and user profile data...`)
+    // 3️⃣ Merge artist + user profile for binding
+    logDebug.info('Merging artist and user profile data...', ctx)
     const mergedData: UserProfile & Partial<MakeupArtist> = {
       ...userProfile,
       ...artistProfile,
     }
 
-    // 4️⃣ Render template onto provided canvas
-    const t3 = performance.now()
-    console.log(`[${FILE} -> ${FUNC}] Rendering template onto canvas...`)
+    // 4️⃣ Render template onto canvas
+    logDebug.startTimer('canvasRender', ctx)
     await renderTemplateToCanvas(
       canvas,
       template,
@@ -109,24 +94,20 @@ export async function generateTemplateImage(
       preloadedBackground,
       preloadedProfileImage
     )
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ Canvas render took ${(performance.now() - t3).toFixed(1)}ms`)
-    console.log(`[${FILE} -> ${FUNC}] 🖼️ Template rendered successfully.`)
+    logDebug.stopTimer('canvasRender', ctx)
+    logDebug.info('🖼️ Template rendered successfully.', ctx)
 
-    // 5️⃣ Upload rendered canvas image to Cloudinary
-    const t4 = performance.now()
-    console.log(`[${FILE} -> ${FUNC}] Uploading rendered image to Cloudinary...`)
+    // 5️⃣ Upload rendered canvas to Cloudinary
+    logDebug.startTimer('upload', ctx)
     const uploadedUrl: string = await uploadGeneratedCard(canvas, artistId)
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ Upload took ${(performance.now() - t4).toFixed(1)}ms`)
+    logDebug.stopTimer('upload', ctx)
 
-    if (!uploadedUrl) {
-      throw new Error('Rendered image upload failed — no Cloudinary URL returned.')
-    }
-
-    console.log(`[${FILE} -> ${FUNC}] ☁️ Uploaded to Cloudinary successfully: ${uploadedUrl}`)
+    if (!uploadedUrl) throw new Error('Rendered image upload failed — no Cloudinary URL returned.')
+    logDebug.info('☁️ Uploaded to Cloudinary successfully:', ctx)
+    logDebug.info(uploadedUrl, ctx)
 
     // 6️⃣ Update Supabase record with generated image URL
-    const t5 = performance.now()
-    console.log(`[${FILE} -> ${FUNC}] Updating Supabase record with generated image URL...`)
+    logDebug.startTimer('dbUpdate', ctx)
     const updateField =
       templateType === 'id_card'
         ? { idcard_url: uploadedUrl }
@@ -136,22 +117,21 @@ export async function generateTemplateImage(
       .from('makeup_artists')
       .update(updateField)
       .eq('id', artistId)
-
-    console.log(`[${FILE} -> ${FUNC}] ⏱️ DB update took ${(performance.now() - t5).toFixed(1)}ms`)
+    logDebug.stopTimer('dbUpdate', ctx)
 
     if (updateError) {
-      console.error(`[${FILE} -> ${FUNC}] ❌ Failed to update Supabase record:`, updateError.message)
+      logDebug.error('❌ Failed to update Supabase record:', ctx)
+      logDebug.error(updateError.message, ctx)
       throw new Error(updateError.message)
     }
 
-    console.log(`[${FILE} -> ${FUNC}] ✅ Supabase record updated successfully.`)
+    logDebug.info('✅ Supabase record updated successfully.', ctx)
+    logDebug.info('🎉 Done. Returning uploaded URL.', ctx)
 
-    // 7️⃣ Return the final uploaded URL
-    console.log(`[${FILE} -> ${FUNC}] 🎉 Done. Total time: ${(performance.now() - startOverall).toFixed(1)}ms`)
-    console.log(`[${FILE} -> ${FUNC}] Returning uploaded URL...`)
     return uploadedUrl
   } catch (err) {
-    console.error(`[${FILE} -> ${FUNC}] ⚠️ Generation process failed:`, err)
+    logDebug.error('⚠️ Generation process failed:', ctx)
+    logDebug.error(err, ctx)
     throw err
   }
 }

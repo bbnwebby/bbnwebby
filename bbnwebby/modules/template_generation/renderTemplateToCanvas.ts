@@ -1,11 +1,11 @@
 // =======================================
 // lib/generation/renderTemplateToCanvas.ts
-// Dynamic Canvas Renderer
+// Dynamic Canvas Renderer (Type-safe, no TS errors)
 // ---------------------------------------
 // - Renders full ID card or certificate to <canvas>
-// - Strongly typed (no "any" or unsafe casts)
-// - Supports both image + text bindings
-// - Handles {{user_profiles.field}} and {{makeup_artists.field}} replacements
+// - Strongly typed (no "any")
+// - Supports image + text bindings
+// - Handles {{user_profiles.field}} and {{makeup_artists.field}}
 // =======================================
 
 import {
@@ -26,58 +26,69 @@ import { logDebug } from '@/modules/template_generation/Debugger'
 const FILE = 'lib/generation/renderTemplateToCanvas.ts'
 
 /**
- * Safely retrieves a value from a nested object using dot notation.
+ * Helper: Safe table record shape used in bindings.
  */
-function getValueFromPath<T extends Record<string, unknown>>(
-  obj: T,
-  path: string | undefined
-): string {
-  const FN = 'getValueFromPath'
-  const ctx = { file: FILE, fn: FN }
-  logDebug.startTimer('getValueFromPath', ctx)
+type RecordStrNullable = Record<string, string | null>
 
-  if (!path) {
-    logDebug.warn(`⚠️ Invalid or missing path received: ${String(path)}`, ctx)
-    logDebug.stopTimer('getValueFromPath', ctx)
+/**
+ * Type-guard: detect an object that carries a `template: string` property.
+ */
+function isTemplateObject(obj: unknown): obj is { template: string } {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'template' in obj &&
+    typeof (obj as Record<string, unknown>).template === 'string'
+  )
+}
+
+/**
+ * Safely retrieves a single field value from a table record.
+ * We assume flat table records (no nested dot paths for table fields).
+ */
+function getValueFromPathRecord(
+  record: RecordStrNullable | undefined,
+  field: string | undefined
+): string {
+  const FN = 'getValueFromPathRecord'
+  const ctx = { file: FILE, fn: FN }
+  logDebug.startTimer('getValueFromPathRecord', ctx)
+
+  if (!record || !field) {
+    logDebug.stopTimer('getValueFromPathRecord', ctx)
     return ''
   }
 
-  const keys = path.split('.')
-  let current: unknown = obj
-  for (const key of keys) {
-    if (typeof current !== 'object' || current === null) {
-      logDebug.warn(`⚠️ Broken path at key "${key}". Current: ${String(current)}`, ctx)
-      logDebug.stopTimer('getValueFromPath', ctx)
-      return ''
-    }
-    current = (current as Record<string, unknown>)[key]
-  }
-
-  const result = typeof current === 'string' ? current : ''
-  logDebug.info(`Retrieved value for path "${path}": ${String(result)}`, ctx)
-  logDebug.stopTimer('getValueFromPath', ctx)
+  const val = record[field]
+  const result = typeof val === 'string' ? val : ''
+  logDebug.info(`Resolved field "${field}" → "${result}"`, ctx)
+  logDebug.stopTimer('getValueFromPathRecord', ctx)
   return result
 }
 
 /**
  * Replaces placeholders (e.g. {{user_profiles.full_name}}) inside text templates.
+ * Accepts a dataMap object keyed by table name.
  */
 function replaceBindings(
   template: string,
-  data: {
-    user_profiles: Record<string, string | null>
-    makeup_artists: Record<string, string | null>
-  }
+  data: Record<string, RecordStrNullable>
 ): string {
   const FN = 'replaceBindings'
   const ctx = { file: FILE, fn: FN }
   logDebug.startTimer('replaceBindings', ctx)
 
   const result = template.replace(/\{\{(.*?)\}\}/g, (_, rawPath) => {
-    const [source, field] = rawPath.trim().split('.')
-    const value =
-      data[source as 'user_profiles' | 'makeup_artists']?.[field] ?? ''
-    return value ? String(value) : ''
+    const [sourceRaw, fieldRaw] = rawPath.trim().split('.')
+    const source = sourceRaw?.trim()
+    const field = fieldRaw?.trim()
+    if (!source || !field) return ''
+
+    const table = data[source]
+    if (!table) return ''
+
+    const v = table[field]
+    return v ? String(v) : ''
   })
 
   logDebug.info(`Processed bindings result: ${result}`, ctx)
@@ -86,28 +97,42 @@ function replaceBindings(
 }
 
 /**
- * Converts a combined user + artist profile into a record of string/null values.
+ * Convert a profile (UserProfile & Partial<MakeupArtist>) into a flat record
+ * of string | null so bindings can read from it.
  */
-function toRecord(profile: UserProfile & Partial<MakeupArtist>): Record<string, string | null> {
+function toRecord(profile: UserProfile & Partial<MakeupArtist>): RecordStrNullable {
   const FN = 'toRecord'
   const ctx = { file: FILE, fn: FN }
   logDebug.startTimer('toRecord', ctx)
 
-  const record: Record<string, string | null> = {}
-  Object.entries(profile).forEach(([key, val]) => {
-    record[key] = typeof val === 'string' ? val : val ?? null
+  const out: RecordStrNullable = {}
+  Object.entries(profile).forEach(([k, v]) => {
+    if (typeof v === 'string') out[k] = v
+    else if (v === null || v === undefined) out[k] = null
+    else out[k] = String(v)
   })
 
-  logDebug.info(
-    `Converted profile to record with ${Object.keys(record).length} fields`,
-    ctx
-  )
+  logDebug.info(`Converted profile to record with ${Object.keys(out).length} keys`, ctx)
   logDebug.stopTimer('toRecord', ctx)
-  return record
+  return out
+}
+
+/**
+ * Map alignment values (including 'justify') to the subset expected by getAlignedX.
+ */
+function normalizeAlignment(al?: TextElement['alignment']): 'left' | 'center' | 'right' {
+  if (al === 'center') return 'center'
+  if (al === 'right') return 'right'
+  // treat 'justify' and any other/undefined as 'left'
+  return 'left'
 }
 
 /**
  * Main renderer: draws background, images, and text bindings on canvas.
+ *
+ * Note: this version still accepts artistProfile and builds a simple dataMap
+ * mapping both 'user_profiles' and 'makeup_artists' to the same record for
+ * backward compatibility with existing templates.
  */
 export async function renderTemplateToCanvas(
   canvas: HTMLCanvasElement,
@@ -132,7 +157,6 @@ export async function renderTemplateToCanvas(
 
   // ---------- Step 1: Draw Background ----------
   logDebug.startTimer('backgroundDraw', ctxLog)
-  // Use preloaded background if provided
   const background = preloadedBackground
     ? preloadedBackground
     : await loadImage(template.background_img_url || '')
@@ -140,22 +164,24 @@ export async function renderTemplateToCanvas(
   canvas.width = background.naturalWidth
   canvas.height = background.naturalHeight
 
+  // drawImage accepts (image, dx, dy, dWidth, dHeight) — use full canvas
   ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
+
   logDebug.info(
     `Background drawn | URL: ${template.background_img_url} | Preloaded Used: ${!!preloadedBackground}`,
     ctxLog
   )
   logDebug.stopTimer('backgroundDraw', ctxLog)
 
+  // Build dataMap from provided artistProfile (backwards-compatible)
   const userData = toRecord(artistProfile)
-  const dataMap = {
+  const dataMap: Record<string, RecordStrNullable> = {
     user_profiles: userData,
     makeup_artists: userData,
   }
 
   // ---------- Step 2: Image Elements ----------
   logDebug.startTimer('imageBlock', ctxLog)
-
   for (let i = 0; i < imageElements.length; i++) {
     const imgEl = imageElements[i]
     const imgTimerLabel = `image_${i}`
@@ -163,37 +189,34 @@ export async function renderTemplateToCanvas(
 
     try {
       let imageUrl = imgEl.image_url
-      let usingProfileProp = false
+      let usedPreloaded = false
 
-      // Check if the image element has a binding config
-      if (Array.isArray(imgEl.binding_config) && imgEl.binding_config.length > 0) {
-        const binding = imgEl.binding_config[0] as BindingConfig
-        const boundUrl = getValueFromPath(dataMap[binding.source], binding.field)
+      const bindingConfigUnknown = imgEl.binding_config as unknown
 
-        // Use provided preloadedProfileImage prop if field matches "profile_photo_url"
+      if (Array.isArray(bindingConfigUnknown) && bindingConfigUnknown.length > 0) {
+        // The declared type is BindingConfig[], so safely cast and use fields:
+        const binding = bindingConfigUnknown[0] as BindingConfig
+        const table = dataMap[binding.source]
+        const boundUrl = getValueFromPathRecord(table, binding.field)
+
         if (preloadedProfileImage && binding.field === 'profile_photo_url') {
           ctx.drawImage(preloadedProfileImage, imgEl.x, imgEl.y, imgEl.width, imgEl.height)
-          usingProfileProp = true
-          logDebug.info(
-            `Profile image drawn from prop | Field: ${binding.field}`,
-            ctxLog
-          )
+          usedPreloaded = true
+          logDebug.info(`Profile image drawn from prop | Field: ${binding.field}`, ctxLog)
           logDebug.stopTimer(imgTimerLabel, ctxLog)
           continue
         }
 
-        // Fallback to Supabase-bound URL if exists
         if (boundUrl) {
           imageUrl = boundUrl
         }
       }
 
-      // Load the image and draw on canvas
       const img = await loadImage(imageUrl)
       ctx.drawImage(img, imgEl.x, imgEl.y, imgEl.width, imgEl.height)
 
       logDebug.info(
-        `Image drawn | URL: ${imageUrl} ${usingProfileProp ? '(used preloadedProfileImage prop)' : ''}`,
+        `Image drawn | URL: ${imageUrl} ${usedPreloaded ? '(preloaded)' : ''}`,
         ctxLog
       )
     } catch (err) {
@@ -202,7 +225,6 @@ export async function renderTemplateToCanvas(
       logDebug.stopTimer(imgTimerLabel, ctxLog)
     }
   }
-
   logDebug.stopTimer('imageBlock', ctxLog)
 
   // ---------- Step 3: Text Elements ----------
@@ -211,9 +233,9 @@ export async function renderTemplateToCanvas(
     const txtEl = textElements[tIndex]
     const txtTimerLabel = `text_${tIndex}`
     logDebug.startTimer(txtTimerLabel, ctxLog)
-
     logDebug.info(`Processing text element: index=${tIndex}`, ctxLog)
 
+    // Deconstruct safely
     const {
       x,
       y,
@@ -227,47 +249,39 @@ export async function renderTemplateToCanvas(
       text_color,
       bg_color,
       bg_transparency,
-      binding_config,
     } = txtEl
+
+    // Treat binding_config as `unknown` so we can detect template objects at runtime
+    const bindingConfigUnknown = (txtEl.binding_config as unknown)
 
     let textTemplate = ''
 
-    if (
-      Array.isArray(binding_config) &&
-      binding_config.length === 1 &&
-      typeof binding_config[0] === 'object' &&
-      binding_config[0] !== null &&
-      'template' in binding_config[0] &&
-      typeof (binding_config[0] as Record<string, unknown>).template === 'string'
-    ) {
-      textTemplate = (binding_config[0] as { template: string }).template
-    } else if (
-      binding_config &&
-      !Array.isArray(binding_config) &&
-      typeof binding_config === 'object' &&
-      'template' in binding_config &&
-      typeof (binding_config as Record<string, unknown>).template === 'string'
-    ) {
-      textTemplate = (binding_config as { template: string }).template
-    } else if (Array.isArray(binding_config)) {
+    // Case A: binding_config is an array and its first entry is a { template: string } object
+    if (Array.isArray(bindingConfigUnknown) && bindingConfigUnknown.length === 1 && isTemplateObject(bindingConfigUnknown[0])) {
+      textTemplate = bindingConfigUnknown[0].template
+    }
+    // Case B: binding_config itself is a template object (legacy shape)
+    else if (!Array.isArray(bindingConfigUnknown) && isTemplateObject(bindingConfigUnknown)) {
+      textTemplate = bindingConfigUnknown.template
+    }
+    // Case C: binding_config is an array of BindingConfig items (field/source/fallback)
+    else if (Array.isArray(bindingConfigUnknown)) {
       const lines: string[] = []
-      for (const binding of binding_config) {
-        if (
-          binding &&
-          typeof binding === 'object' &&
-          'field' in binding &&
-          'source' in binding
-        ) {
-          const b = binding as BindingConfig
-          const val =
-            getValueFromPath(dataMap[b.source], b.field) ||
-            b.fallback ||
-            ''
+      for (const bRaw of bindingConfigUnknown) {
+        // defensive: ensure this item looks like BindingConfig
+        if (bRaw && typeof bRaw === 'object') {
+          const b = bRaw as BindingConfig
+          const table = dataMap[b.source]
+          let val = getValueFromPathRecord(table, b.field)
+          if (!val && typeof b.fallback === 'string') val = b.fallback
           lines.push(val)
+        } else {
+          lines.push('')
         }
       }
       textTemplate = lines.join('\n')
     } else {
+      // No recognized binding_config shape — leave textTemplate empty
       logDebug.warn('Unrecognized binding_config format', ctxLog)
       logDebug.stopTimer(txtTimerLabel, ctxLog)
       continue
@@ -275,18 +289,14 @@ export async function renderTemplateToCanvas(
 
     const resolvedText = replaceBindings(textTemplate, dataMap)
 
+    // Drawing
     ctx.save()
 
     const safeFont = font && font.trim().length > 0 ? font : 'Poppins'
-    const safeFontSize = font_size || 16
-    const safeLineHeight = line_height || 1.3
-    const safeColor = text_color || '#000000'
-    const safeAlignment: 'left' | 'center' | 'right' =
-      alignment === 'center'
-        ? 'center'
-        : alignment === 'right'
-        ? 'right'
-        : 'left'
+    const safeFontSize = (font_size ?? 16) as number
+    const safeLineHeightFactor = (line_height ?? 1.3) as number
+    const safeColor = text_color ?? '#000000'
+    const safeAlignment = normalizeAlignment(alignment)
 
     ctx.font = `${safeFontSize}px ${safeFont}`
     ctx.fillStyle = safeColor
@@ -307,13 +317,15 @@ export async function renderTemplateToCanvas(
 
     const lines = resolvedText.split('\n')
     let currentY = y
+    const lineHeightPx = safeFontSize * safeLineHeightFactor
+
     for (const line of lines) {
       if (text_wrap && line.length > 0) {
-        drawWrappedText(ctx, line, alignedX, currentY, width, safeLineHeight * safeFontSize)
-        currentY += safeFontSize * safeLineHeight
+        drawWrappedText(ctx, line, alignedX, currentY, width, lineHeightPx)
+        currentY += lineHeightPx
       } else {
         ctx.fillText(line, alignedX, currentY)
-        currentY += safeFontSize * safeLineHeight
+        currentY += lineHeightPx
       }
     }
 
@@ -322,8 +334,8 @@ export async function renderTemplateToCanvas(
     logDebug.info(`Text drawn | Value: "${resolvedText}"`, ctxLog)
     logDebug.stopTimer(txtTimerLabel, ctxLog)
   }
-  logDebug.stopTimer('textBlock', ctxLog)
 
+  logDebug.stopTimer('textBlock', ctxLog)
   logDebug.info('Text block complete', ctxLog)
   logDebug.stopTimer('renderTemplateToCanvas', ctxLog)
   logDebug.info('✅ Rendering complete', ctxLog)

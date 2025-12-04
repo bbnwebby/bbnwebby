@@ -69,51 +69,73 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
   // ---------------------- Step 0: Reset UI ----------------------
   resetUI();
 
-  try {
-    // ---------------------- Step 1: Upload files ----------------------
-    // Upload profile image, logo, and portfolio PDF in parallel
-    const uploadedFiles = await uploadAllFiles();
+try {
+  // ---------------------- Step 1: Start uploads + auth in parallel ----------------------
+  logDebug.startTimer("parallelUploadsAndAuth", { file: FILE, fn: FUNC });
+  logDebug.info("Starting parallel uploads and auth...", { file: FILE, fn: FUNC });
 
-    // ---------------------- Step 2: Create Supabase Auth User ----------------------
-    // Registers the user with Supabase Authentication
-    const user = await createSupabaseUser();
+  const imageUploadPromise = uploadImagesOnly();
+  const userCreationPromise = createSupabaseUser();
 
-    // If user not returned, stop here but inform user
-    if (!user) {
-      setMessage({
-        type: "success",
-        text: "Registration successful! Please verify your email.",
-      });
-      setLoading(false);
-      return;
-    }
+  // Wait for both to finish
+  const [uploadedImages, user] = await Promise.all([imageUploadPromise, userCreationPromise]);
+  logDebug.stopTimer("parallelUploadsAndAuth", { file: FILE, fn: FUNC });
 
-    // ---------------------- Step 3: Insert into user_profiles ----------------------
-    // Stores additional profile info in Supabase table `user_profiles`
-    const profileId = await insertUserProfile(user.id, uploadedFiles.profileImageUrl);
-
-    // ---------------------- Step 4: Generate username ----------------------
-    // Builds a unique username based on fullName, designation, organisation, city
-    const username = generateUsername();
-
-    // ---------------------- Step 5: Insert into makeup_artists ----------------------
-    // Stores artist-specific information, portfolio and logo links
-    const artistId = await insertMakeupArtist(profileId, username, uploadedFiles);
-
-    // ---------------------- Step 6: Generate and Upload ID Card ----------------------
-    // Generates an ID card image, uploads it, and saves URL to database
-    await generateAndUploadIdCard(artistId, uploadedFiles.profileImageFile);
-
-    // ---------------------- Step 7: Reset form ----------------------
-    // Clears the form fields for next registration
-    resetForm();
-  } catch (err: unknown) {
-    // ---------------------- Error Handling ----------------------
-    handleError(err);
-  } finally {
-    // ---------------------- Step 8: Stop loading ----------------------
+  // ---------------------- Step 2: Check user ----------------------
+  logDebug.startTimer("checkUser", { file: FILE, fn: FUNC });
+  if (!user) {
+    setMessage({
+      type: "success",
+      text: "Registration successful! Please verify your email.",
+    });
     setLoading(false);
+    logDebug.stopTimer("checkUser", { file: FILE, fn: FUNC });
+    return;
   }
+  logDebug.stopTimer("checkUser", { file: FILE, fn: FUNC });
+
+  // ---------------------- Step 3: Insert into user_profiles ----------------------
+  logDebug.startTimer("insertUserProfile", { file: FILE, fn: FUNC });
+  const profileId = await insertUserProfile(user.id, uploadedImages.profileImageUrl);
+  logDebug.stopTimer("insertUserProfile", { file: FILE, fn: FUNC });
+
+  // ---------------------- Step 4: Generate username ----------------------
+  logDebug.startTimer("generateUsername", { file: FILE, fn: FUNC });
+  const username = generateUsername();
+  logDebug.stopTimer("generateUsername", { file: FILE, fn: FUNC });
+
+  // ---------------------- Step 5: Insert into makeup_artists ----------------------
+  logDebug.startTimer("insertMakeupArtist", { file: FILE, fn: FUNC });
+  const artistId = await insertMakeupArtist(profileId, username, {
+    profileImageUrl: uploadedImages.profileImageUrl,
+    logoUrl: uploadedImages.logoUrl,
+  });
+  logDebug.stopTimer("insertMakeupArtist", { file: FILE, fn: FUNC });
+
+  // ---------------------- Step 6: Background PDF upload (non-blocking) ----------------------
+  if (portfolioPdfFile) {
+    logDebug.startTimer("uploadPortfolioPdf_background", { file: FILE, fn: FUNC });
+    uploadPortfolioPdfInBackground(artistId, portfolioPdfFile)
+      .finally(() => logDebug.stopTimer("uploadPortfolioPdf_background", { file: FILE, fn: FUNC }));
+  }
+
+  // ---------------------- Step 7: Generate and upload ID card ----------------------
+  logDebug.startTimer("generateAndUploadIdCard", { file: FILE, fn: FUNC });
+  await generateAndUploadIdCard(artistId, uploadedImages.profileImageFile);
+  logDebug.stopTimer("generateAndUploadIdCard", { file: FILE, fn: FUNC });
+
+  // ---------------------- Step 8: Reset form ----------------------
+  logDebug.startTimer("resetForm", { file: FILE, fn: FUNC });
+  resetForm();
+  logDebug.stopTimer("resetForm", { file: FILE, fn: FUNC });
+
+} catch (err: unknown) {
+  handleError(err);
+} finally {
+  setLoading(false);
+}
+
+
 
   logDebug.stopTimer("handleSubmit_called", { file: FILE, fn: FUNC }); // Stop main timer
 
@@ -201,36 +223,87 @@ async function convertToJpeg(
 }
 
 
-  // ---------------------- Parallel File Uploads ----------------------
-  async function uploadAllFiles() {
-    logDebug.startTimer("parallelUploads", { file: FILE, fn: FUNC });
-    logDebug.info("Uploading files in parallel...", { file: FILE, fn: FUNC });
+// ---------------------- Upload Only Images (Profile + Logo) ----------------------
+async function uploadImagesOnly(): Promise<{
+  profileImageUrl: string | null;
+  logoUrl: string | null;
+  profileImageFile: File | null;
+}> {
+  logDebug.startTimer("parallelImageUploads", { file: FILE, fn: FUNC });
+  logDebug.info("Uploading profile + logo images in parallel...", { file: FILE, fn: FUNC });
 
-    // Upload all files in parallel, convert images to JPEG first
-    const [profileImageUrl, logoUrl, portfolioPdfUrl] = await Promise.all([
-      profileImageFile
-        ? convertToJpeg(profileImageFile).then((file) =>
-            CloudinaryService.upload(file, "profile_images")
-          )
-        : Promise.resolve(null),
+  const timeUpload = async (
+    label: string,
+    action: () => Promise<string | null>
+  ): Promise<string | null> => {
+    logDebug.startTimer(label, { file: FILE, fn: FUNC });
+    const result = await action();
+    logDebug.stopTimer(label, { file: FILE, fn: FUNC });
+    return result;
+  };
 
-      logoFile
-        ? convertToJpeg(logoFile).then((file) =>
-            CloudinaryService.upload(file, "logos")
-          )
-        : Promise.resolve(null),
+  const [profileImageUrl, logoUrl] = await Promise.all([
+    profileImageFile
+      ? timeUpload("uploadProfileImage", async () => {
+          const jpegFile = await convertToJpeg(profileImageFile, 0.8);
+          return CloudinaryService.upload(jpegFile, "profile_images");
+        })
+      : Promise.resolve(null),
 
-      portfolioPdfFile
-        ? CloudinaryService.upload(portfolioPdfFile, "portfolios")
-        : Promise.resolve(null),
-    ]);
+    logoFile
+      ? timeUpload("uploadLogo", async () => {
+          const jpegFile = await convertToJpeg(logoFile, 0.8);
+          return CloudinaryService.upload(jpegFile, "logos");
+        })
+      : Promise.resolve(null),
+  ]);
 
-    logDebug.stopTimer("parallelUploads", { file: FILE, fn: FUNC });
-    logDebug.info({ message: "Uploads completed", profileImageUrl, logoUrl, portfolioPdfUrl }, { file: FILE, fn: FUNC });
+  logDebug.stopTimer("parallelImageUploads", { file: FILE, fn: FUNC });
+  logDebug.info(
+    { profileImageUrl, logoUrl },
+    { file: FILE, fn: FUNC }
+  );
 
-    // Return uploaded URLs and original profile image for ID card
-    return { profileImageUrl, logoUrl, portfolioPdfUrl, profileImageFile };
+  return { profileImageUrl, logoUrl, profileImageFile };
+}
+
+  // ---------------------- Background PDF Upload (Non-blocking) ----------------------
+  async function uploadPortfolioPdfInBackground(
+    artistId: string,
+    pdfFile: File
+  ): Promise<void> {
+    try {
+      logDebug.startTimer("uploadPortfolioPdf_background", { file: FILE, fn: FUNC });
+      logDebug.info("Background PDF upload started...", { file: FILE, fn: FUNC });
+
+      const pdfUrl = await CloudinaryService.upload(pdfFile, "portfolios");
+
+      logDebug.info("Background PDF upload completed", {
+        file: FILE,
+        fn: FUNC
+      });
+
+      // Non-blocking DB update
+      supabase
+        .from("makeup_artists")
+        .update({ portfolio_pdf_url: pdfUrl })
+        .eq("id", artistId)
+        .then(() => {
+          logDebug.stopTimer("uploadPortfolioPdf_background", { file: FILE, fn: FUNC });
+          logDebug.info("Portfolio PDF saved to DB", { file: FILE, fn: FUNC });
+        })
+        .catch((err) => {
+          logDebug.error("Failed saving portfolio PDF URL", { file: FILE, fn: FUNC });
+          logDebug.error(err, { file: FILE, fn: FUNC });
+        });
+
+    } catch (err) {
+      logDebug.error("Background PDF upload failed", { file: FILE, fn: FUNC });
+      logDebug.error(err, { file: FILE, fn: FUNC });
+    }
   }
+
+
 
   // ---------------------- Supabase Auth Signup ----------------------
   async function createSupabaseUser() {
@@ -289,24 +362,18 @@ async function convertToJpeg(
   }
 
   // ---------------------- Insert into Makeup Artists ----------------------
-// Define a strict type for the uploaded files
-interface UploadedFiles {
-  profileImageUrl: string | null;
-  logoUrl: string | null;
-  portfolioPdfUrl: string | null;
-  profileImageFile: File | null;
-}
 
+
+// ---------------------- Insert into Makeup Artists ----------------------
 // ---------------------- Insert into Makeup Artists ----------------------
 async function insertMakeupArtist(
   profileId: string,
   username: string,
-  files: UploadedFiles
+  files: { profileImageUrl: string | null; logoUrl: string | null }
 ): Promise<string> {
   logDebug.startTimer("insert_makeup_artists", { file: FILE, fn: FUNC });
   logDebug.info("Inserting into makeup_artists...", { file: FILE, fn: FUNC });
 
-  // Insert artist data into Supabase table
   const { error } = await supabase.from("makeup_artists").insert([
     {
       user_profile_id: profileId,
@@ -314,7 +381,7 @@ async function insertMakeupArtist(
       designation: designation || null,
       instagram_handle: instagramHandle || null,
       username,
-      portfolio_pdf_url: files.portfolioPdfUrl || null,
+      portfolio_pdf_url: null, // <-- PDF uploaded later
       logo_url: files.logoUrl || null,
       status: "pending",
     },
@@ -323,7 +390,6 @@ async function insertMakeupArtist(
   logDebug.stopTimer("insert_makeup_artists", { file: FILE, fn: FUNC });
   if (error) throw new Error(`Artist save failed: ${error.message}`);
 
-  // Fetch the inserted artist's ID
   const { data: artistData, error: fetchError } = await supabase
     .from("makeup_artists")
     .select("id")
@@ -334,41 +400,105 @@ async function insertMakeupArtist(
 
   logDebug.info(`Artist ID: ${artistData.id}`, { file: FILE, fn: FUNC });
 
-  return artistData.id; // Return the artist ID
+  return artistData.id;
 }
 
 
+
   // ---------------------- Generate & Upload ID Card ----------------------
-  async function generateAndUploadIdCard(artistId: string, profileImageFile: File | null) {
-    try {
-      logDebug.startTimer("id_card_generation", { file: FILE, fn: FUNC });
-      logDebug.info("Generating ID Card...", { file: FILE, fn: FUNC });
+// ---------------------- Generate, Compress, and Upload ID Card ----------------------
+async function generateAndUploadIdCard(
+  artistId: string,
+  profileImageFile: File | null
+): Promise<void> {
+  try {
+    logDebug.startTimer("id_card_generation", { file: FILE, fn: FUNC });
+    logDebug.info("Generating ID Card...", { file: FILE, fn: FUNC });
 
-      const templateId = "e4b514f3-28df-4bde-a0fe-0ca9b47c9250";
-      const bgImage = await loadImage("/images/templates/base_id_bg.jpg");
-      const profileImageHtml = profileImageFile ? await loadImageFile(profileImageFile) : null;
+    // ---------------------------------------------------------------------------
+    // Load template & profile image
+    // ---------------------------------------------------------------------------
+    const templateId: string = "e4b514f3-28df-4bde-a0fe-0ca9b47c9250";
+    const bgImage: HTMLImageElement = await loadImage("/images/templates/base_id_bg.jpg");
 
-      const { generateTemplateImage } = await import(
-        "@/modules/template_generation/generateTemplateImage"
-      );
+    const profileImageHtml: HTMLImageElement | null =
+      profileImageFile ? await loadImageFile(profileImageFile) : null;
 
-      const cardUrl: string = await generateTemplateImage(
-        "id_card",
-        templateId,
-        artistId,
-        bgImage,
-        profileImageHtml
-      );
+    // ---------------------------------------------------------------------------
+    // Generate the canvas image (PNG by default inside your template module)
+    // ---------------------------------------------------------------------------
+    const { generateTemplateImage } = await import(
+      "@/modules/template_generation/generateTemplateImage"
+    );
 
-      logDebug.stopTimer("id_card_generation", { file: FILE, fn: FUNC });
-      logDebug.info("ID card generated & uploaded", { file: FILE, fn: FUNC });
+    const rawCardUrl: string = await generateTemplateImage(
+      "id_card",
+      templateId,
+      artistId,
+      bgImage,
+      profileImageHtml
+    );
 
-      await saveIdCardUrl(artistId, cardUrl);
-    } catch (cardError) {
-      logDebug.error("Failed to generate/save ID card", { file: FILE, fn: FUNC });
-      logDebug.error(cardError, { file: FILE, fn: FUNC });
+    // At this point: rawCardUrl = Cloudinary URL OR data URL depending on your generator
+
+    logDebug.info("Template rendered, beginning compression...", {
+      file: FILE,
+      fn: FUNC
+    });
+
+    // ---------------------------------------------------------------------------
+    // Download or convert the generated template into a File
+    // Needed because your convertToJpeg() expects File | Blob
+    // ---------------------------------------------------------------------------
+    const cardBlob: Blob = await fetch(rawCardUrl).then((res) => res.blob());
+    const cardFile: File = new File([cardBlob], "id_card_original.png", {
+      type: cardBlob.type
+    });
+
+    // ---------------------------------------------------------------------------
+    // Compress the ID card to JPEG (Smaller & faster upload)
+    // ---------------------------------------------------------------------------
+    const compressedCardFile: File = await convertToJpeg(
+      cardFile,
+      0.9,       // Good quality for ID card
+      1080,      // Fit to normal mobile display
+      1080
+    );
+
+    logDebug.info("ID card compressed, uploading...", {
+      file: FILE,
+      fn: FUNC
+    });
+    console.log({
+      originalKB: (cardFile.size / 1024).toFixed(2),
+      compressedKB: (compressedCardFile.size / 1024).toFixed(2),
     }
+    )
+
+    // ---------------------------------------------------------------------------
+    // Upload final compressed JPEG to Cloudinary
+    // ---------------------------------------------------------------------------
+    const finalUploadUrl: string = await CloudinaryService.upload(
+      compressedCardFile,
+      "id_cards"
+    );
+
+    logDebug.stopTimer("id_card_generation", { file: FILE, fn: FUNC });
+    logDebug.info("ID card generated, compressed & uploaded", {
+      file: FILE,
+      fn: FUNC
+    });
+    console.log(finalUploadUrl)
+    // ---------------------------------------------------------------------------
+    // Save the uploaded URL into Supabase
+    // ---------------------------------------------------------------------------
+    await saveIdCardUrl(artistId, finalUploadUrl);
+  } catch (cardError) {
+    logDebug.error("Failed to generate/save ID card", { file: FILE, fn: FUNC });
+    logDebug.error(cardError, { file: FILE, fn: FUNC });
   }
+}
+
 
   // ---------------------- Load Image from URL ----------------------
   async function loadImage(src: string): Promise<HTMLImageElement> {
@@ -430,48 +560,7 @@ async function insertMakeupArtist(
     }
   };
 
-  /**
-   * Helper: Upload selected files to Cloudinary using CloudinaryService
-   */
-  const uploadToCloudinary = async ({
-    profileImageFile,
-    logoFile,
-    portfolioPdfFile,
-  }: {
-    profileImageFile: File | null;
-    logoFile: File | null;
-    portfolioPdfFile: File | null;
-  }): Promise<{
-    profileImageUrl: string | null;
-    logoUrl: string | null;
-    portfolioPdfUrl: string | null;
-  }> => {
-    const result = {
-      profileImageUrl: null as string | null,
-      logoUrl: null as string | null,
-      portfolioPdfUrl: null as string | null,
-    };
 
-    try {
-      if (profileImageFile) {
-        console.log('📸 Uploading profile image...');
-        result.profileImageUrl = await CloudinaryService.upload(profileImageFile, 'profile_images');
-      }
-      if (logoFile) {
-        console.log('🏷️ Uploading logo...');
-        result.logoUrl = await CloudinaryService.upload(logoFile, 'logos');
-      }
-      if (portfolioPdfFile) {
-        console.log('📚 Uploading portfolio PDF...');
-        result.portfolioPdfUrl = await CloudinaryService.upload(portfolioPdfFile, 'portfolios');
-      }
-    } catch (error) {
-      console.error('❌ Cloudinary upload failed:', error);
-      throw error;
-    }
-
-    return result;
-  };
 
   // ==================== UI ====================
   return (

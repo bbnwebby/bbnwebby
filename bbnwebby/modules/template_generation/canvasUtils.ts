@@ -7,7 +7,7 @@
 // - Strong TypeScript compliance
 // =======================================
 
-import { logDebug } from '@/utils/Debugger';
+import { logDebug } from '@/modules/template_generation/Debugger';
 
 const FILE = 'lib/generation/canvasUtils.ts';
 

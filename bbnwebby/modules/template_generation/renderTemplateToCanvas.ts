@@ -15,13 +15,13 @@ import {
   UserProfile,
   MakeupArtist,
   BindingConfig,
-} from '@/types/types'
+} from '@/modules/template_generation/types'
 import {
   drawWrappedText,
   getAlignedX,
   loadImage,
 } from '@/modules/template_generation/canvasUtils'
-import { logDebug } from '@/utils/Debugger'
+import { logDebug } from '@/modules/template_generation/Debugger'
 
 const FILE = 'lib/generation/renderTemplateToCanvas.ts'
 

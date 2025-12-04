@@ -10,7 +10,7 @@
 import { canvasToFile } from '@/modules/template_generation/canvasUtils'
 import { CloudinaryService } from '@/lib/cloudinaryService'
 import { supabase } from '@/lib/supabaseClient'
-import { logDebug } from '@/utils/Debugger'
+import { logDebug } from '@/modules/template_generation/Debugger'
 
 /**
  * Converts a rendered canvas into a JPEG file, uploads it to Cloudinary,

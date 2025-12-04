@@ -59,22 +59,78 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
 
 // ==================== Submit Handler ====================
 const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-  e.preventDefault();
+  e.preventDefault(); // Prevent default form submission
 
   const FILE = "SignUp.tsx";
   const FUNC = "handleSubmit";
-  logDebug.startTimer("handleSubmit_called", { file: FILE, fn: FUNC });
 
-  // Reset UI & start debug logs
-  logDebug.info("📝 MAKEUP ARTIST REGISTRATION START", { file: FILE, fn: FUNC });
-  setMessage(null);
-  setLoading(true);
+  logDebug.startTimer("handleSubmit_called", { file: FILE, fn: FUNC }); // Start main timer
 
-  // ========== Utility: Convert File/Blob → JPEG File ==========
-  const convertToJpeg = async (file: File | Blob, quality = 0.9): Promise<File> => {
+  // ---------------------- Step 0: Reset UI ----------------------
+  resetUI();
+
+  try {
+    // ---------------------- Step 1: Upload files ----------------------
+    // Upload profile image, logo, and portfolio PDF in parallel
+    const uploadedFiles = await uploadAllFiles();
+
+    // ---------------------- Step 2: Create Supabase Auth User ----------------------
+    // Registers the user with Supabase Authentication
+    const user = await createSupabaseUser();
+
+    // If user not returned, stop here but inform user
+    if (!user) {
+      setMessage({
+        type: "success",
+        text: "Registration successful! Please verify your email.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    // ---------------------- Step 3: Insert into user_profiles ----------------------
+    // Stores additional profile info in Supabase table `user_profiles`
+    const profileId = await insertUserProfile(user.id, uploadedFiles.profileImageUrl);
+
+    // ---------------------- Step 4: Generate username ----------------------
+    // Builds a unique username based on fullName, designation, organisation, city
+    const username = generateUsername();
+
+    // ---------------------- Step 5: Insert into makeup_artists ----------------------
+    // Stores artist-specific information, portfolio and logo links
+    const artistId = await insertMakeupArtist(profileId, username, uploadedFiles);
+
+    // ---------------------- Step 6: Generate and Upload ID Card ----------------------
+    // Generates an ID card image, uploads it, and saves URL to database
+    await generateAndUploadIdCard(artistId, uploadedFiles.profileImageFile);
+
+    // ---------------------- Step 7: Reset form ----------------------
+    // Clears the form fields for next registration
+    resetForm();
+  } catch (err: unknown) {
+    // ---------------------- Error Handling ----------------------
+    handleError(err);
+  } finally {
+    // ---------------------- Step 8: Stop loading ----------------------
+    setLoading(false);
+  }
+
+  logDebug.stopTimer("handleSubmit_called", { file: FILE, fn: FUNC }); // Stop main timer
+
+  // ======================= Sub-Functions =======================
+
+  // ---------------------- UI Reset ----------------------
+  function resetUI() {
+    logDebug.info("📝 MAKEUP ARTIST REGISTRATION START", { file: FILE, fn: FUNC });
+    setMessage(null); // Clear previous messages
+    setLoading(true); // Show loading spinner
+  }
+
+  // ---------------------- File Conversion to JPEG ----------------------
+  async function convertToJpeg(file: File | Blob, quality = 0.9): Promise<File> {
     logDebug.startTimer("convertToJpeg", { file: FILE, fn: FUNC });
 
-    // Load file as <img>
+    // Load the file into an <img> element
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.onload = () => resolve(image);
@@ -82,17 +138,16 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
       image.src = URL.createObjectURL(file);
     });
 
-    // Draw into canvas
+    // Draw the image into a canvas
     const canvas = document.createElement("canvas");
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas not supported");
-
     ctx.drawImage(img, 0, 0);
 
-    // Convert to JPEG blob
+    // Convert canvas to JPEG file
     const jpegFile = await new Promise<File>((resolve) => {
       canvas.toBlob(
         (blob) => {
@@ -110,15 +165,14 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     logDebug.info("JPEG conversion complete", { file: FILE, fn: FUNC });
 
     return jpegFile;
-  };
+  }
 
-  try {
-    // ======================================================
-    // 1️⃣ Upload files in parallel
-    // ======================================================
+  // ---------------------- Parallel File Uploads ----------------------
+  async function uploadAllFiles() {
     logDebug.startTimer("parallelUploads", { file: FILE, fn: FUNC });
     logDebug.info("Uploading files in parallel...", { file: FILE, fn: FUNC });
 
+    // Upload all files in parallel, convert images to JPEG first
     const [profileImageUrl, logoUrl, portfolioPdfUrl] = await Promise.all([
       profileImageFile
         ? convertToJpeg(profileImageFile).then((file) =>
@@ -138,19 +192,14 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     ]);
 
     logDebug.stopTimer("parallelUploads", { file: FILE, fn: FUNC });
-    logDebug.info(
-      {
-        message: "Uploads completed",
-        profileImageUrl,
-        logoUrl,
-        portfolioPdfUrl,
-      },
-      { file: FILE, fn: FUNC }
-    );
+    logDebug.info({ message: "Uploads completed", profileImageUrl, logoUrl, portfolioPdfUrl }, { file: FILE, fn: FUNC });
 
-    // ======================================================
-    // 2️⃣ Create Supabase Auth user
-    // ======================================================
+    // Return uploaded URLs and original profile image for ID card
+    return { profileImageUrl, logoUrl, portfolioPdfUrl, profileImageFile };
+  }
+
+  // ---------------------- Supabase Auth Signup ----------------------
+  async function createSupabaseUser() {
     logDebug.startTimer("authSignup", { file: FILE, fn: FUNC });
     logDebug.info("Creating Supabase Auth user...", { file: FILE, fn: FUNC });
 
@@ -163,26 +212,17 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     logDebug.stopTimer("authSignup", { file: FILE, fn: FUNC });
 
     if (authError) throw new Error(authError.message);
+    return authData.user || null; // Return null if no user
+  }
 
-    const user = authData.user;
-    if (!user) {
-      setMessage({
-        type: "success",
-        text: "Registration successful! Please verify your email.",
-      });
-      setLoading(false);
-      return;
-    }
-
-    // ======================================================
-    // 3️⃣ Insert into user_profiles
-    // ======================================================
+  // ---------------------- Insert User Profile ----------------------
+  async function insertUserProfile(userId: string, profileImageUrl: string | null) {
     logDebug.startTimer("insert_user_profiles", { file: FILE, fn: FUNC });
     logDebug.info("Inserting into user_profiles...", { file: FILE, fn: FUNC });
 
-    const { error: profileError } = await supabase.from("user_profiles").insert([
+    const { error } = await supabase.from("user_profiles").insert([
       {
-        auth_user_id: user.id,
+        auth_user_id: userId,
         full_name: fullName,
         whatsapp_number: whatsappNumber || null,
         city: city || null,
@@ -191,109 +231,92 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     ]);
 
     logDebug.stopTimer("insert_user_profiles", { file: FILE, fn: FUNC });
-    if (profileError) throw new Error(`Profile creation failed: ${profileError.message}`);
+    if (error) throw new Error(`Profile creation failed: ${error.message}`);
 
-    // ======================================================
-    // 4️⃣ Fetch profile ID
-    // ======================================================
-    logDebug.startTimer("fetch_profile_id", { file: FILE, fn: FUNC });
-    logDebug.info("Fetching user_profile ID...", { file: FILE, fn: FUNC });
-
+    // Fetch the inserted profile's ID
     const { data: profileData, error: fetchError } = await supabase
       .from("user_profiles")
       .select("id")
-      .eq("auth_user_id", user.id)
+      .eq("auth_user_id", userId)
       .single();
 
-    logDebug.stopTimer("fetch_profile_id", { file: FILE, fn: FUNC });
-
     if (fetchError || !profileData) throw new Error("Unable to retrieve profile ID");
+    return profileData.id;
+  }
 
-    logDebug.info(`Profile ID: ${profileData.id}`, { file: FILE, fn: FUNC });
-
-    // ======================================================
-    // 5️⃣ Build username
-    // ======================================================
-    const clean = (s: string) =>
-      s?.trim().replace(/\s+/g, "_").toLowerCase() || "unknown";
-
+  // ---------------------- Generate Username ----------------------
+  function generateUsername() {
+    const clean = (s: string) => s?.trim().replace(/\s+/g, "_").toLowerCase() || "unknown";
     const username = `${clean(fullName)}@${clean(designation)}@${clean(
       organisation
     )}@${clean(city)}`;
-
     logDebug.info(`Generated username: ${username}`, { file: FILE, fn: FUNC });
+    return username;
+  }
 
-    // ======================================================
-    // 6️⃣ Insert into makeup_artists
-    // ======================================================
-    logDebug.startTimer("insert_makeup_artists", { file: FILE, fn: FUNC });
-    logDebug.info("Inserting into makeup_artists...", { file: FILE, fn: FUNC });
+  // ---------------------- Insert into Makeup Artists ----------------------
+// Define a strict type for the uploaded files
+interface UploadedFiles {
+  profileImageUrl: string | null;
+  logoUrl: string | null;
+  portfolioPdfUrl: string | null;
+  profileImageFile: File | null;
+}
 
-    const { error: artistError } = await supabase.from("makeup_artists").insert([
-      {
-        user_profile_id: profileData.id,
-        organisation: organisation || null,
-        designation: designation || null,
-        instagram_handle: instagramHandle || null,
-        username,
-        portfolio_pdf_url: portfolioPdfUrl || null,
-        logo_url: logoUrl || null,
-        status: "pending",
-      },
-    ]);
+// ---------------------- Insert into Makeup Artists ----------------------
+async function insertMakeupArtist(
+  profileId: string,
+  username: string,
+  files: UploadedFiles
+): Promise<string> {
+  logDebug.startTimer("insert_makeup_artists", { file: FILE, fn: FUNC });
+  logDebug.info("Inserting into makeup_artists...", { file: FILE, fn: FUNC });
 
-    logDebug.stopTimer("insert_makeup_artists", { file: FILE, fn: FUNC });
-    if (artistError) throw new Error(`Artist save failed: ${artistError.message}`);
+  // Insert artist data into Supabase table
+  const { error } = await supabase.from("makeup_artists").insert([
+    {
+      user_profile_id: profileId,
+      organisation: organisation || null,
+      designation: designation || null,
+      instagram_handle: instagramHandle || null,
+      username,
+      portfolio_pdf_url: files.portfolioPdfUrl || null,
+      logo_url: files.logoUrl || null,
+      status: "pending",
+    },
+  ]);
 
-    // ======================================================
-    // 7️⃣ Fetch artist ID
-    // ======================================================
-    logDebug.info("Fetching artist ID...", { file: FILE, fn: FUNC });
+  logDebug.stopTimer("insert_makeup_artists", { file: FILE, fn: FUNC });
+  if (error) throw new Error(`Artist save failed: ${error.message}`);
 
-    const { data: artistData, error: fetchArtistError } = await supabase
-      .from("makeup_artists")
-      .select("id")
-      .eq("user_profile_id", profileData.id)
-      .single();
+  // Fetch the inserted artist's ID
+  const { data: artistData, error: fetchError } = await supabase
+    .from("makeup_artists")
+    .select("id")
+    .eq("user_profile_id", profileId)
+    .single();
 
-    if (fetchArtistError || !artistData)
-      throw new Error("Failed to fetch artist record");
+  if (fetchError || !artistData) throw new Error("Failed to fetch artist record");
 
-    const artistId: string = artistData.id;
+  logDebug.info(`Artist ID: ${artistData.id}`, { file: FILE, fn: FUNC });
 
-    logDebug.info(`Artist ID: ${artistId}`, { file: FILE, fn: FUNC });
+  return artistData.id; // Return the artist ID
+}
 
-    // ======================================================
-    // 8️⃣ Generate & Upload ID Card
-    // ======================================================
+
+  // ---------------------- Generate & Upload ID Card ----------------------
+  async function generateAndUploadIdCard(artistId: string, profileImageFile: File | null) {
     try {
       logDebug.startTimer("id_card_generation", { file: FILE, fn: FUNC });
       logDebug.info("Generating ID Card...", { file: FILE, fn: FUNC });
 
       const templateId = "e4b514f3-28df-4bde-a0fe-0ca9b47c9250";
-
-      const bgImage = new Image();
-      bgImage.src = "/images/templates/base_id_bg.jpg";
-
-      await new Promise<void>((resolve, reject) => {
-        bgImage.onload = () => resolve();
-        bgImage.onerror = () => reject();
-      });
+      const bgImage = await loadImage("/images/templates/base_id_bg.jpg");
+      const profileImageHtml = profileImageFile ? await loadImageFile(profileImageFile) : null;
 
       const { generateTemplateImage } = await import(
         "@/modules/template_generation/generateTemplateImage"
       );
-
-      let profileImageHtml: HTMLImageElement | null = null;
-
-      if (profileImageFile) {
-        profileImageHtml = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = reject;
-          img.src = URL.createObjectURL(profileImageFile);
-        });
-      }
 
       const cardUrl: string = await generateTemplateImage(
         "id_card",
@@ -306,39 +329,53 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
       logDebug.stopTimer("id_card_generation", { file: FILE, fn: FUNC });
       logDebug.info("ID card generated & uploaded", { file: FILE, fn: FUNC });
 
-      // Save card URL
-      logDebug.startTimer("update_idcard_url", { file: FILE, fn: FUNC });
-
-      const { error: updateError } = await supabase
-        .from("makeup_artists")
-        .update({ idcard_url: cardUrl })
-        .eq("id", artistId);
-
-      logDebug.stopTimer("update_idcard_url", { file: FILE, fn: FUNC });
-
-      if (updateError)
-        throw new Error(`Failed to save card URL: ${updateError.message}`);
-
-      logDebug.info("ID card URL saved successfully", { file: FILE, fn: FUNC });
+      await saveIdCardUrl(artistId, cardUrl);
     } catch (cardError) {
       logDebug.error("Failed to generate/save ID card", { file: FILE, fn: FUNC });
       logDebug.error(cardError, { file: FILE, fn: FUNC });
     }
+  }
 
-    // ======================================================
-    // 9️⃣ Reset form
-    // ======================================================
-    logDebug.info("Resetting form...", { file: FILE, fn: FUNC });
-    resetForm();
-  } catch (err: unknown) {
+  // ---------------------- Load Image from URL ----------------------
+  async function loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  // ---------------------- Load Image from File ----------------------
+  async function loadImageFile(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  // ---------------------- Save ID Card URL ----------------------
+  async function saveIdCardUrl(artistId: string, cardUrl: string) {
+    logDebug.startTimer("update_idcard_url", { file: FILE, fn: FUNC });
+    const { error } = await supabase
+      .from("makeup_artists")
+      .update({ idcard_url: cardUrl })
+      .eq("id", artistId);
+    logDebug.stopTimer("update_idcard_url", { file: FILE, fn: FUNC });
+    if (error) throw new Error(`Failed to save card URL: ${error.message}`);
+    logDebug.info("ID card URL saved successfully", { file: FILE, fn: FUNC });
+  }
+
+  // ---------------------- Error Handling ----------------------
+  function handleError(err: unknown) {
     const msg = err instanceof Error ? err.message : "Unexpected error occurred";
     logDebug.error(`Registration Error: ${msg}`, { file: FILE, fn: FUNC });
     setMessage({ type: "error", text: msg });
-  } finally {
-    setLoading(false);
   }
-  logDebug.stopTimer("handleSubmit_called", { file: FILE, fn: FUNC });
 };
+
 
   /** Reset the form cleanly after success */
   const resetForm = (): void => {

@@ -13,8 +13,8 @@ import { fetchTemplateDataById } from '@/modules/template_generation/fetchTempla
 import { renderTemplateToCanvas } from '@/modules/template_generation/renderTemplateToCanvas'
 import { uploadGeneratedCard } from '@/modules/template_generation/uploadGeneratedCard'
 import { supabase } from '@/lib/supabaseClient'
-import type { UserProfile, MakeupArtist } from '@/types/types'
-import { logDebug } from '@/utils/Debugger'
+import type { UserProfile, MakeupArtist } from '@/modules/template_generation/types'
+import { logDebug } from '@/modules/template_generation/Debugger'
 
 // 🔒 Constant file identifier
 const FILE = 'generateTemplateImage.ts'

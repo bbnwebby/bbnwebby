@@ -127,45 +127,79 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
   }
 
   // ---------------------- File Conversion to JPEG ----------------------
-  async function convertToJpeg(file: File | Blob, quality = 0.9): Promise<File> {
-    logDebug.startTimer("convertToJpeg", { file: FILE, fn: FUNC });
+// ---------------------- File Conversion to JPEG (with Downscaling) ----------------------
+async function convertToJpeg(
+  file: File | Blob,
+  quality: number = 0.9,
+  maxWidth: number = 1080,
+  maxHeight: number = 720
+): Promise<File> {
 
-    // Load the file into an <img> element
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = reject;
-      image.src = URL.createObjectURL(file);
-    });
+  logDebug.startTimer("convertToJpeg", { file: FILE, fn: FUNC });
+  const file_size = file.size
+  console.log("initial file size: ", file_size)
+  // Load the input file into an <img> element
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = (err) => reject(err);
+    image.src = URL.createObjectURL(file);
+  });
 
-    // Draw the image into a canvas
-    const canvas = document.createElement("canvas");
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
+  // ---------------------- Determine New Dimensions (Preserve Aspect Ratio) ----------------------
+  const originalWidth: number = img.naturalWidth;
+  const originalHeight: number = img.naturalHeight;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Canvas not supported");
-    ctx.drawImage(img, 0, 0);
+  let targetWidth: number = originalWidth;
+  let targetHeight: number = originalHeight;
 
-    // Convert canvas to JPEG file
-    const jpegFile = await new Promise<File>((resolve) => {
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) throw new Error("JPEG conversion failed");
-          const name =
-            file instanceof File ? file.name.replace(/\.\w+$/, ".jpg") : "converted.jpg";
-          resolve(new File([blob], name, { type: "image/jpeg" }));
-        },
-        "image/jpeg",
-        quality
-      );
-    });
+  // Downscale only if the image exceeds the maximum allowed resolution
+  if (originalWidth > maxWidth || originalHeight > maxHeight) {
+    const widthRatio: number = maxWidth / originalWidth;
+    const heightRatio: number = maxHeight / originalHeight;
+    const scaleFactor: number = Math.min(widthRatio, heightRatio); // keep aspect ratio
 
-    logDebug.stopTimer("convertToJpeg", { file: FILE, fn: FUNC });
-    logDebug.info("JPEG conversion complete", { file: FILE, fn: FUNC });
-
-    return jpegFile;
+    targetWidth = Math.floor(originalWidth * scaleFactor);
+    targetHeight = Math.floor(originalHeight * scaleFactor);
   }
+
+  // ---------------------- Draw into Canvas ----------------------
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
+
+  ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+  // ---------------------- Convert Canvas to JPEG ----------------------
+  const jpegFile = await new Promise<File>((resolve) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) throw new Error("JPEG conversion failed");
+
+        const name =
+          file instanceof File ? file.name.replace(/\.\w+$/, ".jpg") : "converted.jpg";
+
+        resolve(new File([blob], name, { type: "image/jpeg" }));
+      },
+      "image/jpeg",
+      quality
+    );
+  });
+
+  console.log("JPEG output size:", {
+    fileSizeBytes: jpegFile.size,
+    fileSizeKB: (jpegFile.size / 1024).toFixed(2)
+  });
+
+  logDebug.stopTimer("convertToJpeg", { file: FILE, fn: FUNC });
+  logDebug.info("JPEG conversion complete", { file: FILE, fn: FUNC });
+
+  return jpegFile;
+}
+
 
   // ---------------------- Parallel File Uploads ----------------------
   async function uploadAllFiles() {

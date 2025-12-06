@@ -1,0 +1,1836 @@
+[
+    {
+        "Service Name": "Clean-Up (Basic, Deep, Cleanse)",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Cleanse, Facial, Basic"
+    },
+    {
+        "Service Name": "Skin Polishing / De-Tan",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Polish, De-Tan, Brightening"
+    },
+    {
+        "Service Name": "M\u2019s Facial (Basic/Advance/Anti-Tan)",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "Facial, Anti-Tan, Basic, Advanced"
+    },
+    {
+        "Service Name": "Hydrating Facial",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "All",
+        "Tags": "Hydration, Facial, Moisture"
+    },
+    {
+        "Service Name": "Anti-Aging Facial/Therapy",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "All",
+        "Tags": "Anti-Aging, Facial, TreatMt"
+    },
+    {
+        "Service Name": "Brightening / Glow Facial",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "All",
+        "Tags": "Brightening, Glow, Facial"
+    },
+    {
+        "Service Name": "Charcoal Facial",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Detox, Facial"
+    },
+    {
+        "Service Name": "Vitamin C Facial",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Brightening, Antioxidant, Facial"
+    },
+    {
+        "Service Name": "Hydra Facial for M/W",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "All",
+        "Tags": "Hydration, Non-Invasive, Advanced"
+    },
+    {
+        "Service Name": "Collagen Facial",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Anti-Aging, Firming, Facial"
+    },
+    {
+        "Service Name": "Ayurvedic/Herbal Facial",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Natural, Herbal, Facial"
+    },
+    {
+        "Service Name": "24k Gold Facial",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Luxury, Glow, Anti-Aging"
+    },
+    {
+        "Service Name": "Wine Facial",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Luxury, Antioxidant, Facial"
+    },
+    {
+        "Service Name": "De-Tan Pack/Mask",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "De-Tan, Brightening"
+    },
+    {
+        "Service Name": "Gentle kid\u2019s facials (Natural products only)",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "K",
+        "Tags": "K, Natural, Gentle"
+    },
+    {
+        "Service Name": "Fruit facial (Chemical-free)",
+        "Price": 0,
+        "Category": "Skin Care",
+        "Audience": "K/W/Other",
+        "Tags": "K, Natural, Facial"
+    },
+    {
+        "Service Name": "Bleaching (Face, Neck, Arms)",
+        "Price": 0,
+        "Category": "Body Care / Skin Care",
+        "Audience": "W/Other",
+        "Tags": "Bleach, Lightening, Face, Body"
+    },
+    {
+        "Service Name": "Hair Cut & Styling",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "M",
+        "Tags": "Haircut, Styling, Basic"
+    },
+    {
+        "Service Name": "Haircuts (Basic, Fade, Layered, Textured)",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "M",
+        "Tags": "Haircut, Style, Fade"
+    },
+    {
+        "Service Name": "Hair Cuts (v, u-Cuts, Layer, Butterfly cuts, Step Cut)",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "W/Other",
+        "Tags": "Haircut, Style, Layer"
+    },
+    {
+        "Service Name": "Beard Trimming & Styling",
+        "Price": 0,
+        "Category": "Hair & Beard Care",
+        "Audience": "M",
+        "Tags": "Beard, Trim, Styling"
+    },
+    {
+        "Service Name": "Royal Shave with Hot Towel",
+        "Price": 0,
+        "Category": "Hair & Beard Care",
+        "Audience": "M",
+        "Tags": "Shave, Luxury, Beard"
+    },
+    {
+        "Service Name": "Hair Coloring / Highlights",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "All",
+        "Tags": "Color, Highlights, Styling"
+    },
+    {
+        "Service Name": "Beard Coloring/ Highlights",
+        "Price": 0,
+        "Category": "Hair & Beard Care",
+        "Audience": "M",
+        "Tags": "Beard, Color, Highlights"
+    },
+    {
+        "Service Name": "Hair Wash / Conditioning",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "All",
+        "Tags": "Wash, Conditioning, Basic"
+    },
+    {
+        "Service Name": "Hair Spa",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "All",
+        "Tags": "Spa, Deep Conditioning, TreatMt"
+    },
+    {
+        "Service Name": "Hair Blow Dry",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "W/Other",
+        "Tags": "Styling, Blowout, Temporary"
+    },
+    {
+        "Service Name": "Curls / Ironing / Crimping",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "W/Other",
+        "Tags": "Styling, Heat, Temporary"
+    },
+    {
+        "Service Name": "Braiding (Single, Double, French)",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "W/Other",
+        "Tags": "Styling, Braids"
+    },
+    {
+        "Service Name": "Bun Styling (Messy, Classic, Party)",
+        "Price": 0,
+        "Category": "Hair Care",
+        "Audience": "W/Other",
+        "Tags": "Styling, Updo"
+    },
+    {
+        "Service Name": "Scalp massage (Oil/ Cream)",
+        "Price": 0,
+        "Category": "Hair Care / Massage",
+        "Audience": "M",
+        "Tags": "Massage, Scalp, Relaxation"
+    },
+    {
+        "Service Name": "Classic Manicure",
+        "Price": 0,
+        "Category": "Hand & Foot Care",
+        "Audience": "M",
+        "Tags": "Manicure, Basic, Cleaning"
+    },
+    {
+        "Service Name": "Deluxe manicure",
+        "Price": 0,
+        "Category": "Hand & Foot Care",
+        "Audience": "M",
+        "Tags": "Manicure, Scrub, Massage"
+    },
+    {
+        "Service Name": "Anti -tan Manicure",
+        "Price": 0,
+        "Category": "Hand & Foot Care",
+        "Audience": "M",
+        "Tags": "Manicure, De-Tan"
+    },
+    {
+        "Service Name": "Pedicure (Basic, Spa, Crystal, Paraffin)",
+        "Price": 0,
+        "Category": "Hand & Foot Care",
+        "Audience": "W/Other",
+        "Tags": "Pedicure, Spa, Basic"
+    },
+    {
+        "Service Name": "Manicure (Basic, Spa, Gel)",
+        "Price": 0,
+        "Category": "Hand & Foot Care",
+        "Audience": "W/Other",
+        "Tags": "Manicure, Spa, Gel"
+    },
+    {
+        "Service Name": "Mini Manicure & Pedicure",
+        "Price": 0,
+        "Category": "Hand & Foot Care",
+        "Audience": "K",
+        "Tags": "K, Mani-Pedi"
+    },
+    {
+        "Service Name": "Nail Art (Basic, 3D, Stone Work)",
+        "Price": 0,
+        "Category": "Nails",
+        "Audience": "W/Other",
+        "Tags": "Art, 3D, Extension"
+    },
+    {
+        "Service Name": "Nail Extensions (Acrylic/ Gel)",
+        "Price": 0,
+        "Category": "Nails",
+        "Audience": "W/Other",
+        "Tags": "Extensions, Acrylic, Gel"
+    },
+    {
+        "Service Name": "Nail Clipping (Hand / Foot)",
+        "Price": 0,
+        "Category": "Nails",
+        "Audience": "M",
+        "Tags": "Clipping, Basic"
+    },
+    {
+        "Service Name": "Nail Spa for M\u2019s",
+        "Price": 0,
+        "Category": "Nails",
+        "Audience": "M",
+        "Tags": "Spa, TreatMt"
+    },
+    {
+        "Service Name": "Cute Nail Painting (Non-Toxic Polish)",
+        "Price": 0,
+        "Category": "Nails",
+        "Audience": "K",
+        "Tags": "K, Non-Toxic, Polish"
+    },
+    {
+        "Service Name": "Body Scrubbing / Scrub",
+        "Price": 0,
+        "Category": "Body Care",
+        "Audience": "All",
+        "Tags": "Scrub, Exfoliation"
+    },
+    {
+        "Service Name": "Body Bleaching",
+        "Price": 0,
+        "Category": "Body Care",
+        "Audience": "M",
+        "Tags": "Bleaching, Lightening"
+    },
+    {
+        "Service Name": "Body Polishing",
+        "Price": 0,
+        "Category": "Body Care",
+        "Audience": "All",
+        "Tags": "Polish, Glow, Scrub"
+    },
+    {
+        "Service Name": "Full Body Waxing",
+        "Price": 0,
+        "Category": "Waxing / Body Care",
+        "Audience": "All",
+        "Tags": "Wax, Hair Removal, Full Body"
+    },
+    {
+        "Service Name": "Facial waxing (Chin, Upper, Forehead, Sideburns)",
+        "Price": 0,
+        "Category": "Waxing",
+        "Audience": "All",
+        "Tags": "Wax, Facial, Hair Removal"
+    },
+    {
+        "Service Name": "Leg Waxing (Full/Half/Thigh)",
+        "Price": 0,
+        "Category": "Waxing",
+        "Audience": "All",
+        "Tags": "Wax, Hair Removal, Legs"
+    },
+    {
+        "Service Name": "Full Body Spa / Full Body Massage",
+        "Price": 0,
+        "Category": "Body Care / Massage",
+        "Audience": "All",
+        "Tags": "Spa, Relaxation, Massage"
+    },
+    {
+        "Service Name": "Small Tattoo (Wrist, Finger, Neck)",
+        "Price": 0,
+        "Category": "Tattoos",
+        "Audience": "All",
+        "Tags": "Small, Permanent, Ink"
+    },
+    {
+        "Service Name": "Full Sleeve/Back Tattoo",
+        "Price": 0,
+        "Category": "Tattoos",
+        "Audience": "All",
+        "Tags": "Large, Permanent, Sleeve, Back"
+    },
+    {
+        "Service Name": "Color / 3D Tattoo",
+        "Price": 0,
+        "Category": "Tattoos",
+        "Audience": "All",
+        "Tags": "Art, Special Effect"
+    },
+    {
+        "Service Name": "Religious/ Spiritual Tattoo",
+        "Price": 0,
+        "Category": "Tattoos",
+        "Audience": "All",
+        "Tags": "Spiritual, Symbolic"
+    },
+    {
+        "Service Name": "Cover Up Tattoo (Old Tattoo Correction)",
+        "Price": 0,
+        "Category": "Tattoos",
+        "Audience": "All",
+        "Tags": "Correction, Cover-Up"
+    },
+    {
+        "Service Name": "Temporary Tattoo (Air brush, Stick-On)",
+        "Price": 0,
+        "Category": "Tattoos",
+        "Audience": "All",
+        "Tags": "Temporary, Airbrush, Event"
+    },
+    {
+        "Service Name": "EngageMt Look/Makeup",
+        "Price": 0,
+        "Category": "Groom / Makeover",
+        "Audience": "All",
+        "Tags": "Bridal, Event, Pre-Wedding"
+    },
+    {
+        "Service Name": "Wedding Day Look / Bridal Makeover",
+        "Price": 0,
+        "Category": "Groom / Makeover",
+        "Audience": "All",
+        "Tags": "Bridal, HD, Airbrush, Wedding"
+    },
+    {
+        "Service Name": "Reception Look/Makeover",
+        "Price": 0,
+        "Category": "Groom / Makeover",
+        "Audience": "All",
+        "Tags": "Bridal, Event, Post-Wedding"
+    },
+    {
+        "Service Name": "Party Look/Makeup",
+        "Price": 0,
+        "Category": "Makeover",
+        "Audience": "All",
+        "Tags": "Event, Evening, Occasion"
+    },
+    {
+        "Service Name": "Classic Gentleman Look",
+        "Price": 0,
+        "Category": "Makeover",
+        "Audience": "M",
+        "Tags": "Classic, Styling, Event"
+    },
+    {
+        "Service Name": "Light Party Makeup for K",
+        "Price": 0,
+        "Category": "Makeover",
+        "Audience": "K",
+        "Tags": "K, Party, Gentle"
+    },
+    {
+        "Service Name": "Traditional Kid Makeover (Bharatnatyam)",
+        "Price": 0,
+        "Category": "Makeover",
+        "Audience": "K",
+        "Tags": "K, Cultural, Performance"
+    },
+    {
+        "Service Name": "HD/Air brush Groom Makeup",
+        "Price": 0,
+        "Category": "Groom",
+        "Audience": "M",
+        "Tags": "HD, Airbrush, Wedding"
+    },
+    {
+        "Service Name": "Eyebrow Threading",
+        "Price": 0,
+        "Category": "Threading & Grooming",
+        "Audience": "W/Other",
+        "Tags": "Brows, Shaping, Hair Removal"
+    },
+    {
+        "Service Name": "Upper-Lip/Chin/Forehead Threading",
+        "Price": 0,
+        "Category": "Threading & Grooming",
+        "Audience": "W/Other",
+        "Tags": "Facial, Hair Removal"
+    },
+    {
+        "Service Name": "Nose Grooming / Threading",
+        "Price": 0,
+        "Category": "Threading & Grooming",
+        "Audience": "All",
+        "Tags": "Nose, Hair Removal"
+    },
+    {
+        "Service Name": "Carbon Laser Facial / Peel",
+        "Price": 0,
+        "Category": "Adv. Skin TreatMt",
+        "Audience": "All",
+        "Tags": "Laser, Advanced, Skin Resurfacing"
+    },
+    {
+        "Service Name": "Chemical Peel (Salicylic, Glycolic, CA)",
+        "Price": 0,
+        "Category": "Cosmetology (Skin)",
+        "Audience": "All",
+        "Tags": "Peel, Acid, Acne, PigMtation"
+    },
+    {
+        "Service Name": "PRP (Platelet-Rich Plasma) Therapy (Face, Scalp)",
+        "Price": 0,
+        "Category": "Cosmetology (Hair & Skin)",
+        "Audience": "All",
+        "Tags": "Clinical, Hair Loss, Rejuvenation"
+    },
+    {
+        "Service Name": "Laser Hair Removal TreatMt",
+        "Price": 0,
+        "Category": "Adv. Hair TreatMt",
+        "Audience": "All",
+        "Tags": "Laser, Permanent Hair Removal"
+    },
+    {
+        "Service Name": "Permanent Hair Straightening & smoothening",
+        "Price": 0,
+        "Category": "Adv. Hair TreatMt",
+        "Audience": "All",
+        "Tags": "Permanent, Straightening, Keratin"
+    },
+    {
+        "Service Name": "Tattoo Removal",
+        "Price": 0,
+        "Category": "Cosmetology (Skin)",
+        "Audience": "All",
+        "Tags": "Laser, Removal"
+    },
+    {
+        "Service Name": "Hair Transplant Consultation",
+        "Price": 0,
+        "Category": "Cosmetology (Hair)",
+        "Audience": "All",
+        "Tags": "Consultation, Clinical, Hair Loss"
+    },
+    {
+        "Service Name": "Full Hands & Feet Mehndi",
+        "Price": 0,
+        "Category": "Mehndi",
+        "Audience": "W/Other",
+        "Tags": "Henna, Bridal, Festive"
+    },
+    {
+        "Service Name": "Saree Draping (Nivi, Gujarati, Dhoti Style)",
+        "Price": 0,
+        "Category": "Dressing & Styling",
+        "Audience": "W/Other",
+        "Tags": "Saree, Traditional, Styling"
+    },
+    {
+        "Service Name": "Floral Hair Bun / Gajra Wrap",
+        "Price": 0,
+        "Category": "Floral Art",
+        "Audience": "W/Other",
+        "Tags": "Floral, Hair, Bridal, Accessory"
+    },
+    {
+        "Service Name": "Horror & Gore SFX Makeup",
+        "Price": 0,
+        "Category": "SFX",
+        "Audience": "All",
+        "Tags": "SFX, Halloween, Costume, Horror"
+    },
+    {
+        "Service Name": "Zombie / Vampire Transformation",
+        "Price": 0,
+        "Category": "SFX",
+        "Audience": "All",
+        "Tags": "SFX, Character, Costume"
+    },
+    {
+        "Service Name": "Superhero / Villain Transformation",
+        "Price": 0,
+        "Category": "SFX",
+        "Audience": "All",
+        "Tags": "SFX, Character, Costume"
+    },
+    {
+        "Service Name": "Teeth Cleaning / Polishing",
+        "Price": 0,
+        "Category": "Teeth",
+        "Audience": "All",
+        "Tags": "Oral Care, Hygiene"
+    },
+    {
+        "Service Name": "Lip Lightening Peel/ Laser / Blushing",
+        "Price": 0,
+        "Category": "Lips",
+        "Audience": "W/Other",
+        "Tags": "Lip Care, PigMtation, Cosmetic"
+    },
+    {
+        "Service Name": "Hair Cuts",
+        "Price": "499+",
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Basic, Layer, Step, U/V, Feather"
+    },
+    {
+        "Service Name": "Layer Cut",
+        "Price": 499,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Haircut, Style"
+    },
+    {
+        "Service Name": "Step Cut",
+        "Price": 499,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Haircut, Style"
+    },
+    {
+        "Service Name": "U/V Cut",
+        "Price": 399,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Haircut, Style"
+    },
+    {
+        "Service Name": "Basic Hair Cut",
+        "Price": 399,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Haircut, Basic"
+    },
+    {
+        "Service Name": "Feather Cut",
+        "Price": 399,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Haircut, Style"
+    },
+    {
+        "Service Name": "Bangs / Fringe Styling",
+        "Price": 299,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Fringe, Trim, Styling"
+    },
+    {
+        "Service Name": "Blow dry",
+        "Price": 399,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Styling, Finish"
+    },
+    {
+        "Service Name": "Straightening with Iron",
+        "Price": 499,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Ironing, Temporary, Heat Style"
+    },
+    {
+        "Service Name": "Curls or Waves",
+        "Price": 499,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Styling, Temporary, Heat Style"
+    },
+    {
+        "Service Name": "Party Hair Style",
+        "Price": 999,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Event, Updo, Styling"
+    },
+    {
+        "Service Name": "Bridal Hair Style",
+        "Price": 1499,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Wedding, Updo, Styling"
+    },
+    {
+        "Service Name": "Bun with Accessories",
+        "Price": 699,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Updo, Accessory"
+    },
+    {
+        "Service Name": "Open Hair Styling",
+        "Price": 799,
+        "Category": "Hair Styling",
+        "Audience": "W",
+        "Tags": "Event, Loose Hair"
+    },
+    {
+        "Service Name": "Regular Hair Wash",
+        "Price": 199,
+        "Category": "Hair Care",
+        "Audience": "W",
+        "Tags": "Basic, Shampoo"
+    },
+    {
+        "Service Name": "Shampoo + Conditioning",
+        "Price": 299,
+        "Category": "Hair Care",
+        "Audience": "W",
+        "Tags": "Basic, Conditioning"
+    },
+    {
+        "Service Name": "Dandruff Control Wash",
+        "Price": 349,
+        "Category": "Hair Care",
+        "Audience": "W",
+        "Tags": "Dandruff, TreatMt"
+    },
+    {
+        "Service Name": "Herbal Wash (ShiKai / Reetha)",
+        "Price": 399,
+        "Category": "Hair Care",
+        "Audience": "W",
+        "Tags": "Natural, Herbal"
+    },
+    {
+        "Service Name": "Hair Color",
+        "Price": "1499+",
+        "Category": "Hair Coloring",
+        "Audience": "W",
+        "Tags": "Dye, Global, Highlights"
+    },
+    {
+        "Service Name": "Global Color",
+        "Price": "2499+",
+        "Category": "Hair Coloring",
+        "Audience": "W",
+        "Tags": "Full Color, Permanent"
+    },
+    {
+        "Service Name": "Highlights",
+        "Price": "999/Section",
+        "Category": "Hair Coloring",
+        "Audience": "W",
+        "Tags": "Streaks, Sectional"
+    },
+    {
+        "Service Name": "Full High Lights",
+        "Price": "1999+",
+        "Category": "Hair Coloring",
+        "Audience": "W",
+        "Tags": "Full Head, Streaks"
+    },
+    {
+        "Service Name": "Balayage / Ombre",
+        "Price": "2999+",
+        "Category": "Hair Coloring",
+        "Audience": "W",
+        "Tags": "Fashion, Gradient, Advanced"
+    },
+    {
+        "Service Name": "Root Touch-up",
+        "Price": 699,
+        "Category": "Hair Coloring",
+        "Audience": "W",
+        "Tags": "Roots, Mainte0ce"
+    },
+    {
+        "Service Name": "Henna Application",
+        "Price": 399,
+        "Category": "Hair Coloring",
+        "Audience": "W",
+        "Tags": "Natural, Henna"
+    },
+    {
+        "Service Name": "Herbal Hair Color",
+        "Price": 799,
+        "Category": "Hair Coloring",
+        "Audience": "W",
+        "Tags": "Herbal, Natural"
+    },
+    {
+        "Service Name": "Hair Spa",
+        "Price": "999+",
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Spa, Deep Conditioning"
+    },
+    {
+        "Service Name": "Classical Hair Spa",
+        "Price": 799,
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Spa, Basic"
+    },
+    {
+        "Service Name": "Anti \u2013 Dandruff + Spa",
+        "Price": 999,
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Dandruff, Spa, TreatMt"
+    },
+    {
+        "Service Name": "Hair Fall Control Spa",
+        "Price": 999,
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Hair Fall, Spa, TreatMt"
+    },
+    {
+        "Service Name": "Keratin Smooth Spa",
+        "Price": 1499,
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Keratin, Smoothing"
+    },
+    {
+        "Service Name": "Deep Conditioning",
+        "Price": 699,
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Moisture, Conditioning"
+    },
+    {
+        "Service Name": "Oil Massage + Steam",
+        "Price": 499,
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Massage, Oil, Relaxation"
+    },
+    {
+        "Service Name": "Smoothening",
+        "Price": 3499,
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Chemical, Permanent"
+    },
+    {
+        "Service Name": "Temporary straightening",
+        "Price": 499,
+        "Category": "Hair TreatMt",
+        "Audience": "W",
+        "Tags": "Temporary, Straightening"
+    },
+    {
+        "Service Name": "Cleanup",
+        "Price": 499,
+        "Category": "Skin Care",
+        "Audience": "W",
+        "Tags": "Basic, Cleanse"
+    },
+    {
+        "Service Name": "Regular Cleanup",
+        "Price": 500,
+        "Category": "Skin Care",
+        "Audience": "W",
+        "Tags": "Basic, Cleanse"
+    },
+    {
+        "Service Name": "Barry Cleanup",
+        "Price": 600,
+        "Category": "Skin Care",
+        "Audience": "W",
+        "Tags": "Deep Cleanse"
+    },
+    {
+        "Service Name": "Deep Cleaning",
+        "Price": 1800,
+        "Category": "Skin Care",
+        "Audience": "W",
+        "Tags": "Deep Cleanse, TreatMt"
+    },
+    {
+        "Service Name": "De- Tan Pack",
+        "Price": 399,
+        "Category": "Skin Care",
+        "Audience": "W",
+        "Tags": "Tan Removal, Mask"
+    },
+    {
+        "Service Name": "Fruit Facial",
+        "Price": "699/1000",
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Fruit, Natural"
+    },
+    {
+        "Service Name": "Gold Facial",
+        "Price": 899,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Luxury, Glow"
+    },
+    {
+        "Service Name": "Anti-Aging Facial",
+        "Price": 1499,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Anti-Wrinkle, Firming"
+    },
+    {
+        "Service Name": "Insta Sheen Facial",
+        "Price": 700,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Instant Glow"
+    },
+    {
+        "Service Name": "Tan Clear Facial",
+        "Price": 1500,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "De-Tan, Brightening"
+    },
+    {
+        "Service Name": "Sensi calm",
+        "Price": 1800,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Sensitive Skin, Soothing"
+    },
+    {
+        "Service Name": "OXY Glow Facial",
+        "Price": 2000,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Oxygen, Glow"
+    },
+    {
+        "Service Name": "Perfect Radiance",
+        "Price": 2200,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Brightening, Radiance"
+    },
+    {
+        "Service Name": "Bridal Glow",
+        "Price": 3500,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Wedding, Pre-Event"
+    },
+    {
+        "Service Name": "Customized pro",
+        "Price": 4500,
+        "Category": "Facial",
+        "Audience": "W",
+        "Tags": "Specialized, Advanced"
+    },
+    {
+        "Service Name": "Upper Lip",
+        "Price": 100,
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Facial, Small Area"
+    },
+    {
+        "Service Name": "Full Face",
+        "Price": 500,
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Facial, Hair Removal"
+    },
+    {
+        "Service Name": "Under Arms",
+        "Price": 250,
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Small Area"
+    },
+    {
+        "Service Name": "Full Arms Wax",
+        "Price": "349/600",
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Arms"
+    },
+    {
+        "Service Name": "Half Arms",
+        "Price": 500,
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Arms, Partial"
+    },
+    {
+        "Service Name": "Full Legs Wax",
+        "Price": "449/700",
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Legs"
+    },
+    {
+        "Service Name": "Half Legs",
+        "Price": 500,
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Legs, Partial"
+    },
+    {
+        "Service Name": "Full Body Wax",
+        "Price": "1099/2500",
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Full Body, Comprehensive"
+    },
+    {
+        "Service Name": "Brazilian Wax",
+        "Price": "899/2000",
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Intimate, Specialised"
+    },
+    {
+        "Service Name": "Half front/Back",
+        "Price": 400,
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Body, Partial"
+    },
+    {
+        "Service Name": "Full Front/ Bank",
+        "Price": 600,
+        "Category": "Waxing",
+        "Audience": "W",
+        "Tags": "Body, Full"
+    },
+    {
+        "Service Name": "Party Makeup",
+        "Price": 1499,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Event, Light"
+    },
+    {
+        "Service Name": "EngageMt Look",
+        "Price": 2499,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Pre-Wedding, Event"
+    },
+    {
+        "Service Name": "Bridal Makeup",
+        "Price": 4999,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Wedding, Basic"
+    },
+    {
+        "Service Name": "Wedding HD Makeup",
+        "Price": 15000,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Wedding, High Definition"
+    },
+    {
+        "Service Name": "Ultimate Air Blush",
+        "Price": 20000,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Wedding, Airbrush, Premium"
+    },
+    {
+        "Service Name": "Young Forever",
+        "Price": 999,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Natural, Minimal"
+    },
+    {
+        "Service Name": "Glassy & Glow",
+        "Price": 1500,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Dewy, Trend"
+    },
+    {
+        "Service Name": "Festive Finish",
+        "Price": 2000,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Festival, Occasion"
+    },
+    {
+        "Service Name": "Show Time",
+        "Price": 2500,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Performance, Bold"
+    },
+    {
+        "Service Name": "Red Carpet",
+        "Price": 3500,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "Glamour, Luxury"
+    },
+    {
+        "Service Name": "All About Glam",
+        "Price": 5000,
+        "Category": "Makeup",
+        "Audience": "W",
+        "Tags": "High Glamour, Luxury"
+    },
+    {
+        "Service Name": "Traditional Bridal Makeup",
+        "Price": 6499,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Traditional, Wedding"
+    },
+    {
+        "Service Name": "Matte Bridal Makeup",
+        "Price": 6999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Matte Finish, Wedding"
+    },
+    {
+        "Service Name": "Christian Bridal Makeup",
+        "Price": 6999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Christian, Wedding"
+    },
+    {
+        "Service Name": "Dewy Bridal Makeup",
+        "Price": 7499,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Dewy Finish, Wedding"
+    },
+    {
+        "Service Name": "Muslim Bridal Makeup",
+        "Price": 7499,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Muslim, Wedding"
+    },
+    {
+        "Service Name": "HD Bridal Makeup",
+        "Price": 7999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "HD, High Definition"
+    },
+    {
+        "Service Name": "South Indian/ Temple Makeup",
+        "Price": 7999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Regional, Traditional"
+    },
+    {
+        "Service Name": "Airbrush Bridal Makeup",
+        "Price": 9999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Airbrush, Premium"
+    },
+    {
+        "Service Name": "EngageMt Make up",
+        "Price": 4999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Pre-Wedding"
+    },
+    {
+        "Service Name": "Reception look",
+        "Price": 5999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Post-Wedding, Event"
+    },
+    {
+        "Service Name": "Haldi Makeup",
+        "Price": 2999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Haldi Ceremony"
+    },
+    {
+        "Service Name": "Mehendi Makeup",
+        "Price": 3499,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Mehendi Ceremony"
+    },
+    {
+        "Service Name": "Pre-Wedding Shooting Makeup",
+        "Price": 4999,
+        "Category": "Bridal",
+        "Audience": "W",
+        "Tags": "Photoshoot, Event"
+    },
+    {
+        "Service Name": "Dupatta Setting",
+        "Price": 699,
+        "Category": "Dressing",
+        "Audience": "W",
+        "Tags": "Styling, Accessory"
+    },
+    {
+        "Service Name": "Cut File & Polish",
+        "Price": 150,
+        "Category": "Nails",
+        "Audience": "W",
+        "Tags": "Basic, Polish"
+    },
+    {
+        "Service Name": "Application of Gel",
+        "Price": 799,
+        "Category": "Nails",
+        "Audience": "W",
+        "Tags": "Gel Polish, Application"
+    },
+    {
+        "Service Name": "Application of Fake Nails",
+        "Price": 799,
+        "Category": "Nails",
+        "Audience": "W",
+        "Tags": "Fake Nails, Extension"
+    },
+    {
+        "Service Name": "Nails Extension (Gel, Acrylic)",
+        "Price": 1999,
+        "Category": "Nails",
+        "Audience": "W",
+        "Tags": "Extension, Gel, Acrylic"
+    },
+    {
+        "Service Name": "Nail Art",
+        "Price": 50,
+        "Category": "Nails",
+        "Audience": "W",
+        "Tags": "Art, Design"
+    },
+    {
+        "Service Name": "Gel Polish Removal",
+        "Price": 299,
+        "Category": "Nails",
+        "Audience": "W",
+        "Tags": "Removal, Gel"
+    },
+    {
+        "Service Name": "Extensions Removal",
+        "Price": 799,
+        "Category": "Nails",
+        "Audience": "W",
+        "Tags": "Removal, Extension"
+    },
+    {
+        "Service Name": "Eyebrow / Upper lip / Chin / Lower Lip / Forehead",
+        "Price": 50,
+        "Category": "Threading",
+        "Audience": "W",
+        "Tags": "Facial, Hair Removal"
+    },
+    {
+        "Service Name": "Jawline",
+        "Price": 70,
+        "Category": "Threading",
+        "Audience": "W",
+        "Tags": "Facial, Hair Removal"
+    },
+    {
+        "Service Name": "Full Face",
+        "Price": 200,
+        "Category": "Threading",
+        "Audience": "W",
+        "Tags": "Facial, Full Face"
+    },
+    {
+        "Service Name": "Finger Mehendi",
+        "Price": 99,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Small Design"
+    },
+    {
+        "Service Name": "Tikki (Circular) Mehendi",
+        "Price": 149,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Circular, Basic"
+    },
+    {
+        "Service Name": "Palm Mehendi (Simple)",
+        "Price": 199,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Hand, Simple"
+    },
+    {
+        "Service Name": "Minimalistic Mehendi",
+        "Price": 199,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Minimal, Simple"
+    },
+    {
+        "Service Name": "Back Hand Mehendi",
+        "Price": 249,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Back of Hand"
+    },
+    {
+        "Service Name": "Mandala Design (One side)",
+        "Price": 249,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Mandala, Geometric"
+    },
+    {
+        "Service Name": "Palm Mehendi (Designers)",
+        "Price": 299,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Hand, Designer"
+    },
+    {
+        "Service Name": "Simple Arabic Design (One Hands)",
+        "Price": 299,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Arabic, Simple"
+    },
+    {
+        "Service Name": "Indian Leaf & Flower Pattern",
+        "Price": 299,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Traditional, Floral"
+    },
+    {
+        "Service Name": "Name Inclusion Mehendi",
+        "Price": 349,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Custom, Personalized"
+    },
+    {
+        "Service Name": "Floral Arabic design",
+        "Price": 349,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Arabic, Floral"
+    },
+    {
+        "Service Name": "Rose Pattern Arabic",
+        "Price": 399,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Arabic, Rose"
+    },
+    {
+        "Service Name": "Wrist to Finger Design",
+        "Price": 399,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Hand, Full Coverage"
+    },
+    {
+        "Service Name": "Full Arabic Design (Both Hands)",
+        "Price": 599,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Arabic, Full Coverage"
+    },
+    {
+        "Service Name": "Arabic Bridal Style",
+        "Price": 799,
+        "Category": "Mehendi",
+        "Audience": "W",
+        "Tags": "Bridal, Arabic"
+    },
+    {
+        "Service Name": "Haircut",
+        "Price": 299,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Basic Haircut"
+    },
+    {
+        "Service Name": "Stylist Cutting",
+        "Price": 200,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Haircut, Style"
+    },
+    {
+        "Service Name": "Beard Trim",
+        "Price": 60,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Beard, Basic Trim"
+    },
+    {
+        "Service Name": "Simple Shaving",
+        "Price": 60,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Shave, Basic"
+    },
+    {
+        "Service Name": "Special Shaving",
+        "Price": 100,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Shave, Hot Towel"
+    },
+    {
+        "Service Name": "Beard Shape Up",
+        "Price": 120,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Beard, Shaping"
+    },
+    {
+        "Service Name": "Beard Styling",
+        "Price": 149,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Beard, Style"
+    },
+    {
+        "Service Name": "Hair Wash",
+        "Price": 180,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Basic, Shampoo"
+    },
+    {
+        "Service Name": "Beard Color",
+        "Price": 300,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Beard, Coloring"
+    },
+    {
+        "Service Name": "Hair Color",
+        "Price": 899,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Hair, Coloring"
+    },
+    {
+        "Service Name": "Dandruff TreatMt",
+        "Price": 999,
+        "Category": "Hair & Beard",
+        "Audience": "M",
+        "Tags": "Dandruff, TreatMt"
+    },
+    {
+        "Service Name": "Nourishing Spa",
+        "Price": 700,
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "Spa, Nourishing"
+    },
+    {
+        "Service Name": "Moisturizing Hair SPA",
+        "Price": "850+",
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "Spa, Moisture"
+    },
+    {
+        "Service Name": "Color Hair Spa",
+        "Price": 950,
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "Spa, Color Protection"
+    },
+    {
+        "Service Name": "Frizzy Hair Spa",
+        "Price": 1100,
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "Spa, Anti-Frizz"
+    },
+    {
+        "Service Name": "Repair Hair SPA",
+        "Price": 1200,
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "Spa, Repair"
+    },
+    {
+        "Service Name": "SP Hair SPA",
+        "Price": 1800,
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "Spa, Premium"
+    },
+    {
+        "Service Name": "Dandruff / Hair Fall",
+        "Price": 1800,
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "TreatMt, Specialized"
+    },
+    {
+        "Service Name": "Protein TreatMt",
+        "Price": 1800,
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "TreatMt, Protein"
+    },
+    {
+        "Service Name": "Smoothing",
+        "Price": 3500,
+        "Category": "Hair TreatMt",
+        "Audience": "M",
+        "Tags": "Permanent, Straightening"
+    },
+    {
+        "Service Name": "Peel Of Mask / Flow Mask",
+        "Price": 300,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "Mask, Peel-Off"
+    },
+    {
+        "Service Name": "Tan Removal",
+        "Price": 399,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "De-Tan, Pack"
+    },
+    {
+        "Service Name": "Herbal Face Pack",
+        "Price": 399,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "Pack, Herbal, Natural"
+    },
+    {
+        "Service Name": "Cleanup",
+        "Price": 499,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "Basic, Cleanse"
+    },
+    {
+        "Service Name": "Regular Clean-up",
+        "Price": 499,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "Basic, Cleanse"
+    },
+    {
+        "Service Name": "Fruit Clean-up",
+        "Price": 599,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "Fruit, Cleanse"
+    },
+    {
+        "Service Name": "Fruit Facial",
+        "Price": 600,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Fruit, Natural"
+    },
+    {
+        "Service Name": "M\u2019s Facial",
+        "Price": 899,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Basic Facial"
+    },
+    {
+        "Service Name": "De-tan Facial",
+        "Price": 900,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Tan Removal"
+    },
+    {
+        "Service Name": "Gold Facial",
+        "Price": 1000,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Luxury, Glow"
+    },
+    {
+        "Service Name": "Charcoal Facial",
+        "Price": 1099,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Detox, Deep Cleanse"
+    },
+    {
+        "Service Name": "Charcoal Cleanup",
+        "Price": 999,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "Charcoal, Cleanse"
+    },
+    {
+        "Service Name": "Hydrating Facial",
+        "Price": 1299,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Hydration"
+    },
+    {
+        "Service Name": "Diamond Facial",
+        "Price": 1800,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Luxury, Brightening"
+    },
+    {
+        "Service Name": "Whitening Mask",
+        "Price": 500,
+        "Category": "Skin Care",
+        "Audience": "M",
+        "Tags": "Whitening, Mask"
+    },
+    {
+        "Service Name": "Skin Lightening",
+        "Price": 1600,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Brightening"
+    },
+    {
+        "Service Name": "Natural Lightening",
+        "Price": 2200,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Brightening, Natural"
+    },
+    {
+        "Service Name": "Photo Facial",
+        "Price": 2800,
+        "Category": "Facial",
+        "Audience": "M",
+        "Tags": "Advanced, Light Therapy"
+    },
+    {
+        "Service Name": "Peel off TreatMt",
+        "Price": 1299,
+        "Category": "Adv. Skin",
+        "Audience": "M",
+        "Tags": "Peel, Exfoliation"
+    },
+    {
+        "Service Name": "O3+ Facial",
+        "Price": 1599,
+        "Category": "Adv. Skin",
+        "Audience": "M",
+        "Tags": "Advanced, O3+, TreatMt"
+    },
+    {
+        "Service Name": "Skin Polishing",
+        "Price": 1499,
+        "Category": "Adv. Skin",
+        "Audience": "M",
+        "Tags": "Polishing, Microdermabrasion"
+    },
+    {
+        "Service Name": "Hydra facial for M\u2019s",
+        "Price": 2499,
+        "Category": "Adv. Skin",
+        "Audience": "M",
+        "Tags": "HydraFacial, Advanced"
+    },
+    {
+        "Service Name": "Face Lifting Massage",
+        "Price": 799,
+        "Category": "Adv. Skin",
+        "Audience": "M",
+        "Tags": "Massage, Anti-Aging"
+    },
+    {
+        "Service Name": "Full Arms",
+        "Price": 399,
+        "Category": "Waxing",
+        "Audience": "M",
+        "Tags": "Arms, Hair Removal"
+    },
+    {
+        "Service Name": "Full Chest",
+        "Price": 449,
+        "Category": "Waxing",
+        "Audience": "M",
+        "Tags": "Torso, Hair Removal"
+    },
+    {
+        "Service Name": "Full Back",
+        "Price": 499,
+        "Category": "Waxing",
+        "Audience": "M",
+        "Tags": "Back, Hair Removal"
+    },
+    {
+        "Service Name": "Full Body",
+        "Price": 1299,
+        "Category": "Waxing",
+        "Audience": "M",
+        "Tags": "Full Body, Hair Removal"
+    },
+    {
+        "Service Name": "Groom Makeover",
+        "Price": 3999,
+        "Category": "Grooming",
+        "Audience": "M",
+        "Tags": "Wedding, Makeover"
+    },
+    {
+        "Service Name": "Pre-Wedding Packages",
+        "Price": 4999,
+        "Category": "Grooming",
+        "Audience": "M",
+        "Tags": "Wedding, Package"
+    },
+    {
+        "Service Name": "Free Groom Facial & Skin Pack",
+        "Price": 1999,
+        "Category": "Grooming",
+        "Audience": "M",
+        "Tags": "Package, Skin Care"
+    },
+    {
+        "Service Name": "Instant Glow Groom Kit",
+        "Price": 1799,
+        "Category": "Grooming",
+        "Audience": "M",
+        "Tags": "Package, Glow"
+    },
+    {
+        "Service Name": "Baby Hair Cut",
+        "Price": 249,
+        "Category": "Hair",
+        "Audience": "K",
+        "Tags": "Baby, First Cut"
+    },
+    {
+        "Service Name": "Trendy Hair Cut",
+        "Price": 299,
+        "Category": "Hair",
+        "Audience": "K",
+        "Tags": "Haircut, Style"
+    },
+    {
+        "Service Name": "Braiding",
+        "Price": 199,
+        "Category": "Hair",
+        "Audience": "K",
+        "Tags": "Styling, Braids"
+    },
+    {
+        "Service Name": "Cute Manicure",
+        "Price": 199,
+        "Category": "Nails",
+        "Audience": "K",
+        "Tags": "Manicure, Basic"
+    },
+    {
+        "Service Name": "Nail Art",
+        "Price": 249,
+        "Category": "Nails",
+        "Audience": "K",
+        "Tags": "Art, Design"
+    },
+    {
+        "Service Name": "Princess Makeup",
+        "Price": 599,
+        "Category": "Makeup",
+        "Audience": "K",
+        "Tags": "Party, Character"
+    },
+    {
+        "Service Name": "Fancy Dress Face Art",
+        "Price": 699,
+        "Category": "SFX",
+        "Audience": "K",
+        "Tags": "Costume, Face Paint"
+    },
+    {
+        "Service Name": "Temporary Tattoos",
+        "Price": 199,
+        "Category": "SFX",
+        "Audience": "K",
+        "Tags": "Temporary, Tattoos"
+    },
+    {
+        "Service Name": "Cartoon /ANIMAL FACE ART",
+        "Price": 699,
+        "Category": "SFX Makeup",
+        "Audience": "A",
+        "Tags": "Character, Face Paint"
+    },
+    {
+        "Service Name": "Zombie / Vampire look",
+        "Price": 899,
+        "Category": "SFX Makeup",
+        "Audience": "A",
+        "Tags": "Horror, Costume, Halloween"
+    },
+    {
+        "Service Name": "Super Heroo Transformation",
+        "Price": 999,
+        "Category": "SFX Makeup",
+        "Audience": "A",
+        "Tags": "Character, Costume"
+    },
+    {
+        "Service Name": "Mythological Characters",
+        "Price": 0,
+        "Category": "SFX Makeup",
+        "Audience": "A",
+        "Tags": "Character, Cultural"
+    },
+    {
+        "Service Name": "Head Massage",
+        "Price": 299,
+        "Category": "Wellness",
+        "Audience": "A",
+        "Tags": "Massage, Scalp, Relaxation"
+    },
+    {
+        "Service Name": "Foot Massage",
+        "Price": 499,
+        "Category": "Wellness",
+        "Audience": "A",
+        "Tags": "Massage, Feet, Relaxation"
+    },
+    {
+        "Service Name": "Body polish",
+        "Price": 1499,
+        "Category": "Wellness",
+        "Audience": "A",
+        "Tags": "Body Scrub, Exfoliation"
+    },
+    {
+        "Service Name": "Saree Draping",
+        "Price": 299,
+        "Category": "Dressing",
+        "Audience": "A",
+        "Tags": "Draping, Traditional"
+    },
+    {
+        "Service Name": "Bridal Dupatta Styling",
+        "Price": 399,
+        "Category": "Dressing",
+        "Audience": "A",
+        "Tags": "Styling, Bridal"
+    },
+    {
+        "Service Name": "Groom Sherwani setting",
+        "Price": 499,
+        "Category": "Dressing",
+        "Audience": "M",
+        "Tags": "Styling, Groom"
+    },
+    {
+        "Service Name": "K Costume Dressing",
+        "Price": 299,
+        "Category": "Dressing",
+        "Audience": "K",
+        "Tags": "Styling, Costume"
+    }
+]

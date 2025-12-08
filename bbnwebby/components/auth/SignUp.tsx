@@ -37,6 +37,7 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
   // ==================== UI State ====================
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<Message | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // ==================== File Handlers ====================
   const handleProfileChange = (files: FileList | null): void => {
@@ -63,6 +64,14 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 
   const FILE = "SignUp.tsx";
   const FUNC = "handleSubmit";
+  
+    // ---- PREVENT DOUBLE SUBMISSION ----
+  if (isSubmitting) {
+    console.log("⛔ Prevented double submission");
+    return;
+  }
+  setIsSubmitting(true);
+
 
   logDebug.startTimer("handleSubmit_called", { file: FILE, fn: FUNC }); // Start main timer
 
@@ -89,6 +98,7 @@ try {
       text: "Registration successful! Please verify your email.",
     });
     setLoading(false);
+    setIsSubmitting(false);
     logDebug.stopTimer("checkUser", { file: FILE, fn: FUNC });
     return;
   }
@@ -323,11 +333,21 @@ async function uploadImagesOnly(): Promise<{
   }
 
   // ---------------------- Insert User Profile ----------------------
-  async function insertUserProfile(userId: string, profileImageUrl: string | null) {
-    logDebug.startTimer("insert_user_profiles", { file: FILE, fn: FUNC });
-    logDebug.info("Inserting into user_profiles...", { file: FILE, fn: FUNC });
+// ---------------------- Insert User Profile (Fixed Version) ----------------------
+async function insertUserProfile(
+  userId: string,
+  profileImageUrl: string | null
+): Promise<string> {
+  logDebug.startTimer("insert_user_profiles", { file: FILE, fn: FUNC });
+  logDebug.info("Inserting into user_profiles...", { file: FILE, fn: FUNC });
 
-    const { error } = await supabase.from("user_profiles").insert([
+  // ---------------------------------------------------------
+  // Insert the profile and ask Supabase to RETURN the ID
+  // This avoids the second SELECT that fails due to RLS
+  // ---------------------------------------------------------
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .insert([
       {
         auth_user_id: userId,
         full_name: fullName,
@@ -335,21 +355,21 @@ async function uploadImagesOnly(): Promise<{
         city: city || null,
         profile_photo_url: profileImageUrl || null,
       },
-    ]);
+    ])
+    .select("id") // <-- returns the UUID directly from the INSERT
+    .single();    // <-- ensure exact one row returned
 
-    logDebug.stopTimer("insert_user_profiles", { file: FILE, fn: FUNC });
-    if (error) throw new Error(`Profile creation failed: ${error.message}`);
+  logDebug.stopTimer("insert_user_profiles", { file: FILE, fn: FUNC });
 
-    // Fetch the inserted profile's ID
-    const { data: profileData, error: fetchError } = await supabase
-      .from("user_profiles")
-      .select("id")
-      .eq("auth_user_id", userId)
-      .single();
-
-    if (fetchError || !profileData) throw new Error("Unable to retrieve profile ID");
-    return profileData.id;
+  if (error) {
+    throw new Error(`Profile creation failed: ${error.message}`);
   }
+
+  // ---------------------------------------------------------
+  // Return the ID directly from the INSERT result (NO RLS HIT)
+  // ---------------------------------------------------------
+  return data.id;
+}
 
   // ---------------------- Generate Username ----------------------
   function generateUsername() {

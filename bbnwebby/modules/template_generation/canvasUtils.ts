@@ -47,7 +47,7 @@ export const loadImage = (url: string): Promise<HTMLImageElement> =>
 export const canvasToFile = (
   canvas: HTMLCanvasElement,
   filename: string,
-  quality: number = 0.95
+  quality: number = 0.9
 ): Promise<File> =>
   new Promise((resolve, reject) => {
     const FN = 'canvasToFile';
@@ -215,3 +215,83 @@ export const replacePlaceholders = (
   logDebug.info('✅ Replacement complete', ctx);
   return result;
 };
+
+
+/**
+ * Converts a canvas to a downscaled JPEG file.
+ * Preserves aspect ratio and applies quality compression.
+ */
+export const canvasToDownscaledJpeg = (
+  canvas: HTMLCanvasElement,
+  filename: string,
+  quality: number = 0.9,
+  maxWidth: number = 1080,
+  maxHeight: number = 1080
+): Promise<File> =>
+  new Promise((resolve, reject) => {
+    const FN = 'canvasToDownscaledJpeg';
+    const ctx = { file: FILE, fn: FN };
+    logDebug.startTimer(FN, ctx);
+
+    logDebug.info(`🧾 Starting canvas downscaling: ${filename}`, ctx);
+    logDebug.info(`Original size: ${canvas.width}x${canvas.height}`, ctx);
+
+    const originalWidth = canvas.width;
+    const originalHeight = canvas.height;
+
+    // Calculate downscaled dimensions (preserve aspect ratio)
+    let targetWidth = originalWidth;
+    let targetHeight = originalHeight;
+
+    if (originalWidth > maxWidth || originalHeight > maxHeight) {
+      const widthRatio = maxWidth / originalWidth;
+      const heightRatio = maxHeight / originalHeight;
+      const scaleFactor = Math.min(widthRatio, heightRatio);
+
+      targetWidth = Math.floor(originalWidth * scaleFactor);
+      targetHeight = Math.floor(originalHeight * scaleFactor);
+
+      logDebug.info(`📐 Downscaling to: ${targetWidth}x${targetHeight} (scale: ${scaleFactor.toFixed(2)})`, ctx);
+    } else {
+      logDebug.info('✅ No downscaling needed (within limits)', ctx);
+    }
+
+    // Create new canvas with target dimensions
+    const downscaledCanvas = document.createElement('canvas');
+    downscaledCanvas.width = targetWidth;
+    downscaledCanvas.height = targetHeight;
+
+    const context = downscaledCanvas.getContext('2d');
+    if (!context) {
+      logDebug.stopTimer(FN, ctx);
+      logDebug.error('❌ Canvas context not available', ctx);
+      reject(new Error('Canvas context not available'));
+      return;
+    }
+
+    // Draw downscaled image
+    context.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+
+    // Convert to JPEG blob
+    downscaledCanvas.toBlob(
+      (blob) => {
+        logDebug.stopTimer(FN, ctx);
+
+        if (!blob) {
+          logDebug.error(`❌ Conversion to Blob failed for "${filename}"`, ctx);
+          reject(new Error('Canvas conversion to Blob failed.'));
+          return;
+        }
+
+        const file = new File([blob], filename, { type: 'image/jpeg' });
+
+        logDebug.info(
+          `✅ Canvas downscaled & converted → ${file.name} (${(file.size / 1024).toFixed(2)}KB)`,
+          ctx
+        );
+        resolve(file);
+      },
+      'image/jpeg',
+      quality
+    );
+  });

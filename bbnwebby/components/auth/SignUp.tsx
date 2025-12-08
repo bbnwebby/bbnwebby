@@ -425,8 +425,7 @@ async function insertMakeupArtist(
 
 
 
-  // ---------------------- Generate & Upload ID Card ----------------------
-// ---------------------- Generate, Compress, and Upload ID Card ----------------------
+// ---------------------- Generate & Upload ID Card ----------------------
 async function generateAndUploadIdCard(
   artistId: string,
   profileImageFile: File | null
@@ -445,13 +444,14 @@ async function generateAndUploadIdCard(
       profileImageFile ? await loadImageFile(profileImageFile) : null;
 
     // ---------------------------------------------------------------------------
-    // Generate the canvas image (PNG by default inside your template module)
+    // Generate the template image
+    // (Now handles downscaling + compression + upload internally)
     // ---------------------------------------------------------------------------
     const { generateTemplateImage } = await import(
       "@/modules/template_generation/generateTemplateImage"
     );
 
-    const rawCardUrl: string = await generateTemplateImage(
+    const idCardUrl: string = await generateTemplateImage(
       "id_card",
       templateId,
       artistId,
@@ -459,60 +459,12 @@ async function generateAndUploadIdCard(
       profileImageHtml
     );
 
-    // At this point: rawCardUrl = Cloudinary URL OR data URL depending on your generator
-
-    logDebug.info("Template rendered, beginning compression...", {
-      file: FILE,
-      fn: FUNC
-    });
-
-    // ---------------------------------------------------------------------------
-    // Download or convert the generated template into a File
-    // Needed because your convertToJpeg() expects File | Blob
-    // ---------------------------------------------------------------------------
-    const cardBlob: Blob = await fetch(rawCardUrl).then((res) => res.blob());
-    const cardFile: File = new File([cardBlob], "id_card_original.png", {
-      type: cardBlob.type
-    });
-
-    // ---------------------------------------------------------------------------
-    // Compress the ID card to JPEG (Smaller & faster upload)
-    // ---------------------------------------------------------------------------
-    const compressedCardFile: File = await convertToJpeg(
-      cardFile,
-      0.9,       // Good quality for ID card
-      1080,      // Fit to normal mobile display
-      1080
-    );
-
-    logDebug.info("ID card compressed, uploading...", {
-      file: FILE,
-      fn: FUNC
-    });
-    console.log({
-      originalKB: (cardFile.size / 1024).toFixed(2),
-      compressedKB: (compressedCardFile.size / 1024).toFixed(2),
-    }
-    )
-
-    // ---------------------------------------------------------------------------
-    // Upload final compressed JPEG to Cloudinary
-    // ---------------------------------------------------------------------------
-    const finalUploadUrl: string = await CloudinaryService.upload(
-      compressedCardFile,
-      "id_cards"
-    );
-
     logDebug.stopTimer("id_card_generation", { file: FILE, fn: FUNC });
-    logDebug.info("ID card generated, compressed & uploaded", {
+    logDebug.info(`ID card generated & uploaded: ${idCardUrl}`, {
       file: FILE,
       fn: FUNC
     });
-    console.log(finalUploadUrl)
-    // ---------------------------------------------------------------------------
-    // Save the uploaded URL into Supabase
-    // ---------------------------------------------------------------------------
-    await saveIdCardUrl(artistId, finalUploadUrl);
+
   } catch (cardError) {
     logDebug.error("Failed to generate/save ID card", { file: FILE, fn: FUNC });
     logDebug.error(cardError, { file: FILE, fn: FUNC });

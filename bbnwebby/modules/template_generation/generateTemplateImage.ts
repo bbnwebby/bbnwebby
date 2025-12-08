@@ -5,7 +5,6 @@
 // - Fetches a template and its design elements from Supabase
 // - Renders it onto a provided <canvas>
 // - Uploads the rendered image to Cloudinary
-// - Updates Supabase record with the generated image URL
 // - Returns the uploaded URL
 // =======================================
 
@@ -106,26 +105,7 @@ export async function generateTemplateImage(
     logDebug.info('☁️ Uploaded to Cloudinary successfully:', ctx)
     logDebug.info(uploadedUrl, ctx)
 
-    // 6️⃣ Update Supabase record with generated image URL
-    logDebug.startTimer('dbUpdate', ctx)
-    const updateField =
-      templateType === 'id_card'
-        ? { idcard_url: uploadedUrl }
-        : { certificate_url: uploadedUrl }
-
-    const { error: updateError } = await supabase
-      .from('makeup_artists')
-      .update(updateField)
-      .eq('id', artistId)
-    logDebug.stopTimer('dbUpdate', ctx)
-
-    if (updateError) {
-      logDebug.error('❌ Failed to update Supabase record:', ctx)
-      logDebug.error(updateError.message, ctx)
-      throw new Error(updateError.message)
-    }
-
-    logDebug.info('✅ Supabase record updated successfully.', ctx)
+    
     logDebug.info('🎉 Done. Returning uploaded URL.', ctx)
 
     return uploadedUrl

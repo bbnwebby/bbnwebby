@@ -7,7 +7,7 @@
 // - Updates artist record with the generated image URL
 // =======================================
 
-import { canvasToFile } from '@/modules/template_generation/canvasUtils'
+import { canvasToDownscaledJpeg, canvasToFile } from '@/modules/template_generation/canvasUtils'
 import { CloudinaryService } from '@/lib/cloudinaryService'
 import { supabase } from '@/lib/supabaseClient'
 import { logDebug } from '@/modules/template_generation/Debugger'
@@ -38,7 +38,7 @@ export async function uploadGeneratedCard(
     logDebug.startTimer('convertCanvas', { file: FILE, fn: FUNC })
     logDebug.info('Converting canvas to file...', { file: FILE, fn: FUNC })
 
-    const file = await canvasToFile(canvas, `id_card_${artistId}.jpg`, 0.9)
+    const file = await canvasToDownscaledJpeg(canvas, `id_card_${artistId}.jpg`, 0.9)
 
     logDebug.stopTimer('convertCanvas', { file: FILE, fn: FUNC })
     logDebug.info(`Canvas converted to file (${file.name})`, { file: FILE, fn: FUNC })

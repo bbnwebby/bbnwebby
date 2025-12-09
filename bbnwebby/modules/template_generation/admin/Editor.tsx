@@ -4,10 +4,10 @@ import React from "react";
 import LeftSidebar from "./LeftSidebar";
 import Canvas from "./Canvas";
 import RightSidebar from "./RightSidebar";
-import { EditorState } from "./types";
+import { EditorState } from "../types";
 
 interface EditorProps {
-  state: EditorState; // full editor store from parent
+  state: EditorState;
 }
 
 /**

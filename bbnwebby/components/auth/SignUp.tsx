@@ -278,40 +278,44 @@ async function uploadImagesOnly(): Promise<{
 }
 
   // ---------------------- Background PDF Upload (Non-blocking) ----------------------
-  async function uploadPortfolioPdfInBackground(
-    artistId: string,
-    pdfFile: File
-  ): Promise<void> {
+async function uploadPortfolioPdfInBackground(
+  artistId: string,
+  pdfFile: File
+): Promise<void> {
+  try {
+    logDebug.startTimer("uploadPortfolioPdf_background", { file: FILE, fn: FUNC });
+    logDebug.info("Background PDF upload started...", { file: FILE, fn: FUNC });
+
+    // Upload PDF to Cloudinary
+    const pdfUrl = await CloudinaryService.upload(pdfFile, "portfolios");
+
+    logDebug.info("Background PDF upload completed", { file: FILE, fn: FUNC });
+
+    // Update DB with the new PDF URL
     try {
-      logDebug.startTimer("uploadPortfolioPdf_background", { file: FILE, fn: FUNC });
-      logDebug.info("Background PDF upload started...", { file: FILE, fn: FUNC });
-
-      const pdfUrl = await CloudinaryService.upload(pdfFile, "portfolios");
-
-      logDebug.info("Background PDF upload completed", {
-        file: FILE,
-        fn: FUNC
-      });
-
-      // Non-blocking DB update
-      supabase
+      const { data, error } = await supabase
         .from("makeup_artists")
         .update({ portfolio_pdf_url: pdfUrl })
-        .eq("id", artistId)
-        .then(() => {
-          logDebug.stopTimer("uploadPortfolioPdf_background", { file: FILE, fn: FUNC });
-          logDebug.info("Portfolio PDF saved to DB", { file: FILE, fn: FUNC });
-        })
-        .catch((err) => {
-          logDebug.error("Failed saving portfolio PDF URL", { file: FILE, fn: FUNC });
-          logDebug.error(err, { file: FILE, fn: FUNC });
-        });
+        .eq("id", artistId);
 
-    } catch (err) {
-      logDebug.error("Background PDF upload failed", { file: FILE, fn: FUNC });
-      logDebug.error(err, { file: FILE, fn: FUNC });
+      if (error) {
+        logDebug.error("Failed saving portfolio PDF URL", { file: FILE, fn: FUNC });
+        logDebug.error(error, { file: FILE, fn: FUNC });
+      } else {
+        logDebug.stopTimer("uploadPortfolioPdf_background", { file: FILE, fn: FUNC });
+        logDebug.info("Portfolio PDF saved to DB", { file: FILE, fn: FUNC });
+      }
+    } catch (dbErr: unknown) {
+      // Unexpected DB errors
+      logDebug.error("Unexpected error during DB update", { file: FILE, fn: FUNC });
+      logDebug.error(dbErr, { file: FILE, fn: FUNC });
     }
+
+  } catch (err: unknown) {
+    logDebug.error("Background PDF upload failed", { file: FILE, fn: FUNC });
+    logDebug.error(err, { file: FILE, fn: FUNC });
   }
+}
 
 
 

@@ -1,126 +1,163 @@
 // =======================================
 // types.tsx
-// Strongly typed interfaces for Supabase tables
+// Strong, safe, and complete interfaces 
+// for Supabase-driven template editor
 // =======================================
 
-
 /**
- * Represents a registered user profile in the system.
+ * Represents a registered user profile.
  */
 export interface UserProfile {
-  id: string; // Unique identifier (UUID)
-  auth_user_id: string; // FK to Supabase auth.users.id
-  full_name: string; // User's full name
-  whatsapp_number?: string | null; // Optional WhatsApp contact
-  profile_photo_url?: string | null; // Profile image URL
-  location_url?: string | null; // Google Maps or custom location link
-  city?: string | null; // City name
-  created_at?: string | null; // Record creation timestamp
-  updated_at?: string | null; // Record last update timestamp
+  id: string;
+  auth_user_id: string;
+  full_name: string;
+  whatsapp_number?: string | null;
+  profile_photo_url?: string | null;
+  location_url?: string | null;
+  city?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
-
 /**
- * Represents a makeup artist user.
+ * Represents a makeup artist account.
  */
 export interface MakeupArtist {
-  id: string; // Unique identifier (UUID)
-  user_profile_id: string; // FK to user_profiles.id
-  organisation?: string | null; // Organization or brand name
-  designation?: string | null; // Role or title
-  instagram_handle?: string | null; // Instagram username
-  username: string; // Display username (unique within app)
-  status?: "pending" | "approved" | "rejected" | null; // Artist status (enum)
-  portfolio_pdf_url?: string | null; // PDF portfolio link
-  logo_url?: string | null
-  idcard_url?: string | null
-  created_at?: string | null; // Record creation timestamp
-  updated_at?: string | null; // Record last update timestamp
+  id: string;
+  user_profile_id: string;
+  organisation?: string | null;
+  designation?: string | null;
+  instagram_handle?: string | null;
+  username: string;
+  status?: "pending" | "approved" | "rejected" | null;
+  portfolio_pdf_url?: string | null;
+  logo_url?: string | null;
+  idcard_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
-
-
-
 /**
- * Shared binding configuration for text/image elements.
+ * Shared binding configuration for text or image elements.
+ * Maps dynamic fields from user_profiles/makeup_artists into templates.
  */
 export interface BindingConfig {
-  source: 'user_profiles' | 'makeup_artists';
+  source: "user_profiles" | "makeup_artists";
   field: string;
   fallback?: string;
-  transform?: 'uppercase' | 'lowercase' | 'capitalize';
+  transform?: "uppercase" | "lowercase" | "capitalize";
 }
 
 /**
- * Text layer element mapped to Supabase `text_elements`.
+ * Base positioning and sizing shared by all canvas elements.
  */
-export interface TextElement {
+export interface BaseElement {
   id: string;
   template_id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  alignment?: 'left' | 'center' | 'right' | 'justify' | null;
+  x: number;      // position X
+  y: number;      // position Y
+  width: number;  // element width
+  height: number; // element height
+  z_index?: number;
+  binding_config?: BindingConfig[] | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+/**
+ * Text layer element (from Supabase table: text_elements).
+ */
+export interface TextElement extends BaseElement {
+  type: "text";  // discriminated union
+  alignment?: "left" | "center" | "right" | "justify" | null;
   text_wrap?: boolean;
   line_height?: number;
   font?: string;
   font_size?: number;
   text_color?: string;
   bg_color?: string;
-  bg_transparency?: number;
-  z_index?: number;
-  binding_config?: BindingConfig[] | null;
+  bg_transparency?: number; // 0.0 to 1.0 (validated by Supabase)
   static_text: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 /**
- * Image layer element mapped to Supabase `image_elements`.
+ * Image layer element (from Supabase table: image_elements).
  */
-export interface ImageElement {
-  id: string;
-  template_id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  object_fit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+export interface ImageElement extends BaseElement {
+  type: "image"; // discriminated union
   image_url: string;
-  z_index?: number;
-  binding_config?: BindingConfig[] | null;
-  created_at?: string;
-  updated_at?: string;
+  object_fit?: "contain" | "cover" | "fill" | "none" | "scale-down";
 }
 
 /**
- * Template base for certificates or ID cards.
+ * Reusable union for all canvas elements.
+ */
+export type TemplateElement = TextElement | ImageElement;
+
+/**
+ * Template base (certificate or ID card).
  */
 export interface Template {
   id: string;
   name: string;
-  type: 'certificate' | 'id_card';
+  type: "certificate" | "id_card";
   background_img_url?: string | null;
-  created_at?: string;
-  updated_at?: string;
-text_elements?: TextElement[] | null;
-image_elements?: ImageElement[] | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  text_elements?: TextElement[] | null;
+  image_elements?: ImageElement[] | null;
 }
 
-
-
-// =======================================
-// Optional Aggregated Type Maps
-// =======================================
-
 /**
- * Maps all table names to their corresponding TypeScript interfaces.
+ * Map of Supabase tables to TypeScript models (optional).
  */
 export interface DatabaseTables {
-  image_elements: ImageElement;
+  user_profiles: UserProfile;
   makeup_artists: MakeupArtist;
   templates: Template;
   text_elements: TextElement;
-  user_profiles: UserProfile;
+  image_elements: ImageElement;
+}
+
+// =======================================
+// Editor Types (used only inside the editor UI)
+// =======================================
+
+export type ElementType = "text" | "image";
+
+/**
+ * Base shape for elements inside the editor.
+ * Mirrors DB values but adds `type` for runtime logic.
+ */
+export interface EditorElement {
+  id: string;
+  type: ElementType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  z_index: number;
+
+  // TEXT FIELDS
+  text?: string;
+  font_size?: number;
+  font?: string;
+  text_color?: string;
+
+  // IMAGE FIELDS
+  image_url?: string;
+}
+
+/**
+ * The full editor state shape used by Canvas, Sidebar, etc.
+ */
+export interface EditorState {
+  elements: EditorElement[];
+  setElements: (value: EditorElement[]) => void;
+
+  selectedId: string | null;
+  setSelectedId: (id: string | null) => void;
+
+  backgroundUrl: string | null;
+  setBackgroundUrl: (url: string | null) => void;
 }

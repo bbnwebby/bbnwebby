@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { EditorState, TextElement, ImageElement } from "./types";
+import { EditorState } from "../types";
 import { v4 as uuid } from "uuid";
 
 interface SidebarProps {
@@ -15,24 +15,27 @@ export default function LeftSidebar({ state }: SidebarProps) {
   const { elements, setElements } = state;
 
   const addText = () => {
-    const newEl: TextElement = {
+    const newEl = {
       id: uuid(),
-      type: "text",
+      type: "text" as const,
       text: "New Text",
       x: 50,
       y: 50,
       width: 150,
       height: 40,
       z_index: elements.length + 1,
+      font_size: 16,
+      font: "Arial",
+      text_color: "#000000",
     };
 
     setElements([...elements, newEl]);
   };
 
   const addImage = () => {
-    const newEl: ImageElement = {
+    const newEl = {
       id: uuid(),
-      type: "image",
+      type: "image" as const,
       image_url: "https://placehold.co/200x200",
       x: 100,
       y: 100,

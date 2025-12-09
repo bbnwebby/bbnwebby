@@ -71,6 +71,7 @@ export interface TextElement {
   bg_transparency?: number;
   z_index?: number;
   binding_config?: BindingConfig[] | null;
+  static_text: string;
   created_at?: string;
   updated_at?: string;
 }

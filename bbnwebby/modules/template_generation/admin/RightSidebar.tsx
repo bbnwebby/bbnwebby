@@ -2,6 +2,35 @@
 
 import React from "react";
 
+interface BindingConfig {
+  source: "user_profiles" | "makeup_artists";
+  field: string;
+  fallback?: string;
+  transform?: "uppercase" | "lowercase" | "capitalize";
+}
+
+interface EditorElement {
+  id: string;
+  type: "text" | "image";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  z_index: number;
+  text?: string;
+  font_size?: number;
+  font?: string;
+  text_color?: string;
+  bg_color?: string;
+  bg_transparency?: number;
+  alignment?: "left" | "center" | "right" | "justify";
+  text_wrap?: boolean;
+  line_height?: number;
+  image_url?: string;
+  object_fit?: "contain" | "cover" | "fill" | "none" | "scale-down";
+  binding_config?: BindingConfig[];
+}
+
 interface RightSidebarProps {
   elements: EditorElement[];
   setElements: (elements: EditorElement[]) => void;
@@ -32,6 +61,35 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const deleteSelected = () => {
     setElements(elements.filter((el) => el.id !== selectedId));
     setSelectedId(null);
+  };
+
+  const addBinding = () => {
+    const currentBindings = selectedElement?.binding_config || [];
+    updateSelected({
+      binding_config: [
+        ...currentBindings,
+        {
+          source: "user_profiles",
+          field: "",
+          fallback: "",
+          transform: undefined
+        }
+      ]
+    });
+  };
+
+  const updateBinding = (index: number, updates: Partial<BindingConfig>) => {
+    const currentBindings = selectedElement?.binding_config || [];
+    const newBindings = [...currentBindings];
+    newBindings[index] = { ...newBindings[index], ...updates };
+    updateSelected({ binding_config: newBindings });
+  };
+
+  const removeBinding = (index: number) => {
+    const currentBindings = selectedElement?.binding_config || [];
+    updateSelected({
+      binding_config: currentBindings.filter((_, i) => i !== index)
+    });
   };
 
   if (!selectedElement) {
@@ -68,6 +126,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       </div>
 
       <div className="space-y-3">
+        {/* Position & Size */}
         <div>
           <label className="block text-sm font-medium mb-1">X Position</label>
           <input
@@ -118,6 +177,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           />
         </div>
 
+        {/* Text Element Properties */}
         {selectedElement.type === "text" && (
           <>
             <div>
@@ -127,7 +187,11 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 onChange={(e) => updateSelected({ text: e.target.value })}
                 className="w-full border rounded p-2"
                 rows={3}
+                placeholder="Static text or preview text"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                This will be replaced by bound data if bindings are configured
+              </p>
             </div>
 
             <div>
@@ -144,9 +208,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               <label className="block text-sm font-medium mb-1">Font Family</label>
               <input
                 type="text"
-                value={selectedElement.font || "Arial"}
+                value={selectedElement.font || "Poppins"}
                 onChange={(e) => updateSelected({ font: e.target.value })}
                 className="w-full border rounded p-2"
+                placeholder="Poppins, Arial, etc."
               />
             </div>
 
@@ -223,6 +288,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </>
         )}
 
+        {/* Image Element Properties */}
         {selectedElement.type === "image" && (
           <>
             <div>
@@ -232,7 +298,11 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 value={selectedElement.image_url || ""}
                 onChange={(e) => updateSelected({ image_url: e.target.value })}
                 className="w-full border rounded p-2"
+                placeholder="https://example.com/image.jpg"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Static image or preview image
+              </p>
             </div>
 
             <div>
@@ -251,6 +321,103 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             </div>
           </>
         )}
+
+        {/* Data Binding Configuration */}
+        <div className="mt-6 pt-4 border-t border-gray-300">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-semibold text-sm">Data Bindings</h3>
+            <button
+              onClick={addBinding}
+              className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+            >
+              + Add Binding
+            </button>
+          </div>
+
+          {(!selectedElement.binding_config || selectedElement.binding_config.length === 0) && (
+            <p className="text-xs text-gray-500 italic">
+              No data bindings configured. Click Add Binding to connect this element to dynamic data.
+            </p>
+          )}
+
+          {selectedElement.binding_config && selectedElement.binding_config.length > 0 && (
+            <div className="space-y-4">
+              {selectedElement.binding_config.map((binding, index) => (
+                <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg space-y-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-semibold text-gray-700">Binding #{index + 1}</span>
+                    <button
+                      onClick={() => removeBinding(index)}
+                      className="text-red-600 hover:text-red-800 text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Data Source</label>
+                    <select
+                      value={binding.source}
+                      onChange={(e) => updateBinding(index, { 
+                        source: e.target.value as "user_profiles" | "makeup_artists" 
+                      })}
+                      className="w-full border rounded p-1.5 text-sm"
+                    >
+                      <option value="user_profiles">User Profiles</option>
+                      <option value="makeup_artists">Makeup Artists</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Field Name</label>
+                    <input
+                      type="text"
+                      value={binding.field}
+                      onChange={(e) => updateBinding(index, { field: e.target.value })}
+                      className="w-full border rounded p-1.5 text-sm"
+                      placeholder="e.g., full_name, email"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Fallback Value</label>
+                    <input
+                      type="text"
+                      value={binding.fallback || ""}
+                      onChange={(e) => updateBinding(index, { fallback: e.target.value })}
+                      className="w-full border rounded p-1.5 text-sm"
+                      placeholder="Default if data missing"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Transform</label>
+                    <select
+                      value={binding.transform || ""}
+                      onChange={(e) => updateBinding(index, { 
+                        transform: e.target.value as "uppercase" | "lowercase" | "capitalize" | undefined 
+                      })}
+                      className="w-full border rounded p-1.5 text-sm"
+                    >
+                      <option value="">None</option>
+                      <option value="uppercase">UPPERCASE</option>
+                      <option value="lowercase">lowercase</option>
+                      <option value="capitalize">Capitalize</option>
+                    </select>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-600">
+                      Preview: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
+                        {`{{${binding.source}.${binding.field || '?'}}}`}
+                      </code>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

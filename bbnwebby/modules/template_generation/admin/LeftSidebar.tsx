@@ -1,69 +1,102 @@
 "use client";
 
 import React from "react";
-import { EditorState } from "../types";
 import { v4 as uuid } from "uuid";
 
-interface SidebarProps {
-  state: EditorState;
+interface LeftSidebarProps {
+  elements: EditorElement[];
+  setElements: (elements: EditorElement[]) => void;
+  selectedId: string | null;
+  setSelectedId: (id: string | null) => void;
 }
 
-/**
- * Sidebar for adding new elements to the canvas.
- */
-export default function LeftSidebar({ state }: SidebarProps) {
-  const { elements, setElements } = state;
-
+export const LeftSidebar: React.FC<LeftSidebarProps> = ({ 
+  elements, 
+  setElements,
+  selectedId,
+  setSelectedId
+}) => {
   const addText = () => {
-    const newEl = {
+    const newEl: EditorElement = {
       id: uuid(),
-      type: "text" as const,
+      type: "text",
       text: "New Text",
       x: 50,
       y: 50,
-      width: 150,
-      height: 40,
-      z_index: elements.length + 1,
+      width: 200,
+      height: 50,
+      z_index: elements.length,
       font_size: 16,
       font: "Arial",
       text_color: "#000000",
+      bg_color: "#ffffff",
+      bg_transparency: 0,
+      alignment: "left",
+      text_wrap: false,
+      line_height: 1.2
     };
 
     setElements([...elements, newEl]);
   };
 
   const addImage = () => {
-    const newEl = {
+    const newEl: EditorElement = {
       id: uuid(),
-      type: "image" as const,
-      image_url: "https://placehold.co/200x200",
+      type: "image",
+      image_url: "https://via.placeholder.com/200",
       x: 100,
       y: 100,
       width: 200,
       height: 200,
-      z_index: elements.length + 1,
+      z_index: elements.length,
+      object_fit: "contain"
     };
 
     setElements([...elements, newEl]);
   };
 
+  const handleLayerClick = (elementId: string) => {
+    setSelectedId(elementId);
+  };
+
   return (
-    <div className="border-r p-4 bg-gray-50">
-      <h2 className="font-bold mb-4">Add Elements</h2>
+    <div className="w-64 border-r bg-gray-50 p-4 overflow-y-auto">
+      <h2 className="font-bold mb-4 text-lg">Add Elements</h2>
 
       <button
         onClick={addText}
-        className="w-full mb-2 py-2 bg-blue-600 text-white rounded"
+        className="w-full mb-2 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
       >
-        Add Text
+        + Add Text
       </button>
 
       <button
         onClick={addImage}
-        className="w-full py-2 bg-green-600 text-white rounded"
+        className="w-full mb-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
       >
-        Add Image
+        + Add Image
       </button>
+
+      <div className="border-t pt-4 mt-4">
+        <h3 className="font-semibold mb-2">Layers ({elements.length})</h3>
+        <div className="space-y-1">
+          {[...elements]
+            .sort((a, b) => (b.z_index || 0) - (a.z_index || 0))
+            .map((el) => (
+              <div
+                key={el.id}
+                onClick={() => handleLayerClick(el.id)}
+                className={`p-2 rounded text-sm cursor-pointer ${
+                  el.id === selectedId 
+                    ? 'bg-blue-100 border border-blue-500' 
+                    : 'bg-white hover:bg-gray-100'
+                }`}
+              >
+                {el.type === 'text' ? '📝' : '🖼️'} {el.type} - {el.id.slice(0, 8)}
+              </div>
+            ))}
+        </div>
+      </div>
     </div>
   );
-}
+};

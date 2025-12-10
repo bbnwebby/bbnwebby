@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from 'react';
 
 interface EditorElement {
   id: string;
@@ -33,7 +31,7 @@ interface CanvasProps {
   canvasHeight: number;
 }
 
-export const Canvas: React.FC<CanvasProps> = ({ 
+export const ZoomableCanvas: React.FC<CanvasProps> = ({ 
   elements, 
   setElements, 
   selectedId, 
@@ -42,11 +40,42 @@ export const Canvas: React.FC<CanvasProps> = ({
   canvasWidth,
   canvasHeight 
 }) => {
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
   const [dragging, setDragging] = useState<string | null>(null);
   const [resizing, setResizing] = useState<string | null>(null);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef({ x: 0, y: 0, elementX: 0, elementY: 0 });
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const panStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+
+  const centerCanvas = () => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    // Calculate the scaled canvas dimensions
+    const scaledWidth = canvasWidth * zoom;
+    const scaledHeight = canvasHeight * zoom;
+    
+    setPanOffset({
+      x: (containerWidth - scaledWidth) / 2,
+      y: (containerHeight - scaledHeight) / 2
+    });
+  };
+
+  // Center canvas on mount and when canvas size changes
+  useEffect(() => {
+    // Small delay to ensure container is rendered
+    const timer = setTimeout(() => {
+      centerCanvas();
+    }, 10);
+    return () => clearTimeout(timer);
+  }, [canvasWidth, canvasHeight]);
 
   const updateElement = (id: string, updates: Partial<EditorElement>) => {
     setElements(
@@ -54,33 +83,121 @@ export const Canvas: React.FC<CanvasProps> = ({
     );
   };
 
-  const handleMouseDown = (e: React.MouseEvent, el: EditorElement) => {
-    e.stopPropagation();
-    setSelectedId(el.id);
-    setDragging(el.id);
-    dragStart.current = {
-      x: e.clientX,
-      y: e.clientY,
-      elementX: el.x,
-      elementY: el.y,
+  const screenToCanvas = (screenX: number, screenY: number) => {
+    if (!containerRef.current) return { x: 0, y: 0 };
+    const rect = containerRef.current.getBoundingClientRect();
+    return {
+      x: (screenX - rect.left - panOffset.x) / zoom,
+      y: (screenY - rect.top - panOffset.y) / zoom
     };
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    
+    if (!containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Calculate zoom change
+    const delta = -e.deltaY * 0.001;
+    const newZoom = Math.min(Math.max(0.1, zoom * (1 + delta)), 5);
+    
+    // Calculate new pan offset to keep mouse position fixed
+    const zoomRatio = newZoom / zoom;
+    const newOffsetX = mouseX - (mouseX - panOffset.x) * zoomRatio;
+    const newOffsetY = mouseY - (mouseY - panOffset.y) * zoomRatio;
+    
+    setZoom(newZoom);
+    setPanOffset({ x: newOffsetX, y: newOffsetY });
+  };
+
+  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newZoom = parseFloat(e.target.value);
+    
+    if (!containerRef.current) return;
+    
+    // Zoom from center of viewport
+    const rect = containerRef.current.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const zoomRatio = newZoom / zoom;
+    const newOffsetX = centerX - (centerX - panOffset.x) * zoomRatio;
+    const newOffsetY = centerY - (centerY - panOffset.y) * zoomRatio;
+    
+    setZoom(newZoom);
+    setPanOffset({ x: newOffsetX, y: newOffsetY });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent, el?: EditorElement) => {
+    if (e.button === 1 || (e.button === 0 && e.ctrlKey) || (e.button === 0 && e.metaKey)) {
+      // Middle mouse or Ctrl+Click for panning
+      e.preventDefault();
+      setIsPanning(true);
+      panStart.current = {
+        x: e.clientX,
+        y: e.clientY,
+        offsetX: panOffset.x,
+        offsetY: panOffset.y
+      };
+      return;
+    }
+
+    if (el) {
+      e.stopPropagation();
+      setSelectedId(el.id);
+      setDragging(el.id);
+      const canvasPos = screenToCanvas(e.clientX, e.clientY);
+      dragStart.current = {
+        x: canvasPos.x,
+        y: canvasPos.y,
+        elementX: el.x,
+        elementY: el.y,
+      };
+    } else {
+      // Panning with space bar or just dragging empty space
+      if (e.button === 0 && !el) {
+        setIsPanning(true);
+        panStart.current = {
+          x: e.clientX,
+          y: e.clientY,
+          offsetX: panOffset.x,
+          offsetY: panOffset.y
+        };
+      }
+    }
   };
 
   const handleResizeMouseDown = (e: React.MouseEvent, el: EditorElement) => {
     e.stopPropagation();
     setResizing(el.id);
+    const canvasPos = screenToCanvas(e.clientX, e.clientY);
     resizeStart.current = {
-      x: e.clientX,
-      y: e.clientY,
+      x: canvasPos.x,
+      y: canvasPos.y,
       width: el.width,
       height: el.height,
     };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPanning) {
+      const dx = e.clientX - panStart.current.x;
+      const dy = e.clientY - panStart.current.y;
+      setPanOffset({
+        x: panStart.current.offsetX + dx,
+        y: panStart.current.offsetY + dy
+      });
+      return;
+    }
+
     if (dragging) {
-      const dx = e.clientX - dragStart.current.x;
-      const dy = e.clientY - dragStart.current.y;
+      const canvasPos = screenToCanvas(e.clientX, e.clientY);
+      const dx = canvasPos.x - dragStart.current.x;
+      const dy = canvasPos.y - dragStart.current.y;
       
       updateElement(dragging, {
         x: Math.max(0, Math.min(canvasWidth - 50, dragStart.current.elementX + dx)),
@@ -89,8 +206,9 @@ export const Canvas: React.FC<CanvasProps> = ({
     }
 
     if (resizing) {
-      const dx = e.clientX - resizeStart.current.x;
-      const dy = e.clientY - resizeStart.current.y;
+      const canvasPos = screenToCanvas(e.clientX, e.clientY);
+      const dx = canvasPos.x - resizeStart.current.x;
+      const dy = canvasPos.y - resizeStart.current.y;
       
       updateElement(resizing, {
         width: Math.max(50, resizeStart.current.width + dx),
@@ -100,14 +218,13 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   const handleMouseUp = () => {
-    // Keep the element selected after dragging/resizing
+    setIsPanning(false);
     setDragging(null);
     setResizing(null);
   };
 
   const handleCanvasClick = (e: React.MouseEvent) => {
-    // Only deselect if clicking directly on canvas, not on elements
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !isPanning) {
       setSelectedId(null);
     }
   };
@@ -154,62 +271,105 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   return (
-    <div className="flex-1 bg-gray-200 overflow-auto">
-      <div className="min-h-full flex items-start justify-center p-8">
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-hidden"
+        style={{ 
+          background: "#f3f3f3",
+          cursor: isPanning ? 'grabbing' : 'default'
+        }}
+        onWheel={handleWheel}
+        onMouseDown={(e) => handleMouseDown(e)}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
         <div
-          ref={canvasRef}
-          className="relative"
           style={{
+            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
+            transformOrigin: "0 0",
             width: canvasWidth,
             height: canvasHeight,
-            backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined,
-            backgroundColor: backgroundUrl ? undefined : '#ffffff',
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+            position: 'relative'
           }}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onClick={handleCanvasClick}
         >
-          {[...elements]
-            .sort((a, b) => (a.z_index || 0) - (b.z_index || 0))
-            .map((el) => (
-              <div
-                key={el.id}
-                onMouseDown={(e) => handleMouseDown(e, el)}
-                style={{
-                  position: "absolute",
-                  left: el.x,
-                  top: el.y,
-                  width: el.width,
-                  height: el.height,
-                  border: el.id === selectedId ? "2px solid #4F46E5" : "1px solid rgba(0,0,0,0.1)",
-                  cursor: dragging === el.id ? "grabbing" : "grab",
-                }}
-              >
-                {renderElement(el)}
-                
-                {el.id === selectedId && (
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, el)}
-                    style={{
-                      position: "absolute",
-                      right: -6,
-                      bottom: -6,
-                      width: 14,
-                      height: 14,
-                      backgroundColor: "#4F46E5",
-                      cursor: "nwse-resize",
-                      borderRadius: "50%",
-                      border: "2px solid white",
-                    }}
-                  />
-                )}
-              </div>
-            ))}
+          <div
+            ref={canvasRef}
+            className="relative"
+            style={{
+              width: canvasWidth,
+              height: canvasHeight,
+              backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined,
+              backgroundColor: backgroundUrl ? undefined : '#ffffff',
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+            }}
+            onClick={handleCanvasClick}
+          >
+            {[...elements]
+              .sort((a, b) => (a.z_index || 0) - (b.z_index || 0))
+              .map((el) => (
+                <div
+                  key={el.id}
+                  onMouseDown={(e) => handleMouseDown(e, el)}
+                  style={{
+                    position: "absolute",
+                    left: el.x,
+                    top: el.y,
+                    width: el.width,
+                    height: el.height,
+                    border: el.id === selectedId ? "2px solid #4F46E5" : "1px solid rgba(0,0,0,0.1)",
+                    cursor: dragging === el.id ? "grabbing" : "grab",
+                  }}
+                >
+                  {renderElement(el)}
+                  
+                  {el.id === selectedId && (
+                    <div
+                      onMouseDown={(e) => handleResizeMouseDown(e, el)}
+                      style={{
+                        position: "absolute",
+                        right: -6,
+                        bottom: -6,
+                        width: 14,
+                        height: 14,
+                        backgroundColor: "#4F46E5",
+                        cursor: "nwse-resize",
+                        borderRadius: "50%",
+                        border: "2px solid white",
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Zoom controls */}
+      <div className="p-2 bg-gray-100 flex items-center gap-4">
+        <button
+          onClick={centerCanvas}
+          className="px-3 py-1 bg-white border rounded hover:bg-gray-50 text-sm"
+        >
+          Center
+        </button>
+        <span className="text-sm">Zoom:</span>
+        <input
+          type="range"
+          min={0.1}
+          max={5}
+          step={0.1}
+          value={zoom}
+          onChange={handleZoomChange}
+          className="flex-1"
+        />
+        <span className="text-sm w-12">{Math.round(zoom * 100)}%</span>
+        <div className="text-xs text-gray-500">
+          Scroll to zoom • Drag to pan
         </div>
       </div>
     </div>

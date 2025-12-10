@@ -2,7 +2,7 @@
 
 import React, { Dispatch, JSX, SetStateAction, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Canvas } from "./Canvas";
+import { ZoomableCanvas } from "./Canvas";
 import { RightSidebar } from "./RightSidebar";
 import { LeftSidebar } from "./LeftSidebar";
 
@@ -103,6 +103,12 @@ export default function TemplateEditor(): JSX.Element {
 
   // Canvas size (kept local here — children receive width/height)
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [zoom, setZoom] = useState<number>(1); // 1 = 100%
+
+  // Handler for slider
+  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setZoom(parseFloat(e.target.value));
+  };
 
   // Load image dimensions when background URL changes
   useEffect(() => {
@@ -470,16 +476,23 @@ export default function TemplateEditor(): JSX.Element {
           setSelectedId={setSelectedId}
         />
 
-        {/* Canvas receives editor elements + canvas dimensions */}
-        <Canvas
-          elements={elements}
-          setElements={setElements}
-          selectedId={selectedId}
-          setSelectedId={setSelectedId}
-          backgroundUrl={backgroundUrl}
-          canvasWidth={canvasSize.width}
-          canvasHeight={canvasSize.height}
-        />
+        
+
+
+      <ZoomableCanvas
+        elements={elements}
+        setElements={setElements}
+        selectedId={selectedId}
+        setSelectedId={setSelectedId}
+        backgroundUrl={backgroundUrl}
+        canvasWidth={canvasSize.width}
+        canvasHeight={canvasSize.height}
+      />
+
+
+
+
+
 
         {/* Right sidebar — controls for selected element & background */}
         <RightSidebar

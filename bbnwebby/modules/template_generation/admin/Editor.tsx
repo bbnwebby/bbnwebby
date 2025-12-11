@@ -1,5 +1,3 @@
-// modules\template_generation\admin\Editor.tsx
-
 "use client";
 
 import React, { JSX, useEffect, useState } from "react";
@@ -12,24 +10,31 @@ import * as Types from "../types";
 
 export default function TemplateEditor(): JSX.Element {
   const searchParams = useSearchParams();
-  const modeParam = searchParams.get("mode"); // "create" | "edit" | null
-  const templateIdParam = searchParams.get("template_id"); // string | null
 
-  // Editor state
+  const modeParam = searchParams.get("mode");
+  const templateIdParam = searchParams.get("template_id");
+
+  // --------------------------------------------------
+  // Editor State
+  // --------------------------------------------------
+
   const [elements, setElements] = useState<Types.EditorElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null);
 
-  // Template metadata
   const [templateName, setTemplateName] = useState<string>("");
   const [templateType, setTemplateType] = useState<"certificate" | "id_card">("certificate");
 
-  // Canvas
-  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({
+    width: 800,
+    height: 600,
+  });
 
+  // --------------------------------------------------
+  // Canvas Auto Size Based on Background Image
+  // --------------------------------------------------
 
-  // Adjust canvas size when background changes
   useEffect(() => {
     if (!backgroundUrl) {
       setCanvasSize({ width: 800, height: 600 });
@@ -37,12 +42,23 @@ export default function TemplateEditor(): JSX.Element {
     }
 
     const img = new Image();
-    img.onload = () => setCanvasSize({ width: img.naturalWidth, height: img.naturalHeight });
-    img.onerror = () => setCanvasSize({ width: 800, height: 600 });
+    img.onload = (): void => {
+      setCanvasSize({
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+    };
+    img.onerror = (): void => {
+      setCanvasSize({ width: 800, height: 600 });
+    };
+
     img.src = backgroundUrl;
   }, [backgroundUrl]);
 
-  // Load single template for editing
+  // --------------------------------------------------
+  // Load Template from Supabase
+  // --------------------------------------------------
+
   const loadTemplate = async (templateId: string): Promise<void> => {
     try {
       const { data, error } = await supabase
@@ -58,58 +74,62 @@ export default function TemplateEditor(): JSX.Element {
       setTemplateType(data.type);
       setBackgroundUrl(data.background_img_url);
 
-      const loadedElements: Types.EditorElement[] = [
-        ...(data.text_elements as Types.TextElementRow[]).map((te) => ({
-          id: te.id,
-          type: "text" as const,
-          x: Number(te.x),
-          y: Number(te.y),
-          width: Number(te.width),
-          height: Number(te.height),
-          z_index: te.z_index ?? 0,
-          text: te.static_text ?? "",
-          font_size: te.font_size ?? 16,
-          font: te.font ?? "Arial",
-          text_color: te.text_color ?? "#000000",
-          bg_color: te.bg_color ?? "#ffffff",
-          bg_transparency: te.bg_transparency ?? 0,
-          alignment: te.alignment ?? "left",
-          text_wrap: te.text_wrap ?? false,
-          line_height: te.line_height ?? 1.2,
-          binding_config: te.binding_config ?? [],
-        })),
-        ...(data.image_elements as Types.ImageElementRow[]).map((ie) => ({
-          id: ie.id,
-          type: "image" as const,
-          x: Number(ie.x),
-          y: Number(ie.y),
-          width: Number(ie.width),
-          height: Number(ie.height),
-          z_index: ie.z_index ?? 0,
-          image_url: ie.image_url ?? undefined,
-          object_fit: ie.object_fit ?? "contain",
-          binding_config: ie.binding_config ?? [],
-        })),
-      ];
+      // --------------------------------------------------
+      // Map DB records → EditorElement objects
+      // --------------------------------------------------
 
-      setElements(loadedElements);
+      const textEls = (data.text_elements as Types.TextElementRow[]).map((te) => ({
+        id: te.id,
+        type: "text" as const,
+        x: Number(te.x),
+        y: Number(te.y),
+        width: Number(te.width),
+        height: Number(te.height),
+        z_index: te.z_index ?? 0,
+        text: te.static_text ?? "",
+        font_size: te.font_size ?? 16,
+        font: te.font ?? "Arial",
+        text_color: te.text_color ?? "#000000",
+        bg_color: te.bg_color ?? "#ffffff",
+        bg_transparency: te.bg_transparency ?? 0,
+        alignment: te.alignment ?? "left",
+        text_wrap: te.text_wrap ?? false,
+        line_height: te.line_height ?? 1.2,
+        binding_config: te.binding_config ?? [],
+      }));
+
+      const imageEls = (data.image_elements as Types.ImageElementRow[]).map((ie) => ({
+        id: ie.id,
+        type: "image" as const,
+        x: Number(ie.x),
+        y: Number(ie.y),
+        width: Number(ie.width),
+        height: Number(ie.height),
+        z_index: ie.z_index ?? 0,
+        image_url: ie.image_url,
+        object_fit: ie.object_fit ?? "contain",
+        binding_config: ie.binding_config ?? [],
+        qr_text: ie.qr_text ?? "", // <-- load QR text
+      }));
+
+      setElements([...textEls, ...imageEls]);
       setSelectedId(null);
-
     } catch (err) {
       console.error("Failed to load template:", err);
       alert("Failed to load template");
     }
   };
 
-  // Detect URL changes and set mode/state accordingly
+  // --------------------------------------------------
+  // Reacting to Mode & URL Changes
+  // --------------------------------------------------
+
   useEffect(() => {
     if (modeParam === "edit" && templateIdParam) {
-      // Only reload if the template is different
       if (templateIdParam !== currentTemplateId) {
-        loadTemplate(templateIdParam);
+        void loadTemplate(templateIdParam);
       }
     } else if (modeParam === "create") {
-
       setElements([]);
       setBackgroundUrl(null);
       setSelectedId(null);
@@ -117,136 +137,134 @@ export default function TemplateEditor(): JSX.Element {
       setTemplateName("");
       setTemplateType("certificate");
     }
-  }, [modeParam, templateIdParam]);
+  }, [modeParam, templateIdParam, currentTemplateId]);
 
-  // Schema fetch
+  // --------------------------------------------------
+  // Fetch Supabase Schema via Function
+  // --------------------------------------------------
+
   const [tables, setTables] = useState<Types.TableSchema[]>([]);
   const [loadingSchema, setLoadingSchema] = useState<boolean>(true);
   const [schemaError, setSchemaError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSchema = async () => {
+    const fetchSchema = async (): Promise<void> => {
       try {
         const { data, error } = await supabase.rpc("get_schema");
+
         if (error) {
           setSchemaError("Failed to load schema");
-        } else {
+        } else if (Array.isArray(data)) {
           setTables(data as Types.TableSchema[]);
         }
-      } catch (err) {
-        console.error(err);
+      } catch {
         setSchemaError("Unexpected schema error");
       } finally {
         setLoadingSchema(false);
       }
     };
-    fetchSchema();
+
+    void fetchSchema();
   }, []);
 
-  // Save template
-// Save template to Supabase
-// Save template to Supabase
-const saveTemplate = async (): Promise<void> => {
-  if (!templateName.trim()) {
-    alert("Please enter a template name");
-    return;
-  }
+  // --------------------------------------------------
+  // Save Template
+  // --------------------------------------------------
 
-  try {
-    // 1️⃣ Upsert the template itself
-    const { data: templateData, error: templateError } = await supabase
-      .from("templates")
-      .upsert(
-        {
-          id: currentTemplateId ?? undefined,
-          name: templateName,
-          type: templateType,
-          background_img_url: backgroundUrl ?? null,
-        },
-        { onConflict: "id" }
-      )
-      .select()
-      .single();
-
-    if (templateError || !templateData) throw templateError ?? new Error("Failed to save template");
-
-    const templateId = templateData.id;
-
-    // 2️⃣ Prepare text elements
-    const textElements = elements
-      .filter((el) => el.type === "text")
-      .map((el) => ({
-        id: el.id,
-        template_id: templateId,
-        x: el.x,
-        y: el.y,
-        width: el.width,
-        height: el.height,
-        z_index: el.z_index ?? 0,
-        static_text: el.text ?? "",
-        font: el.font ?? "Poppins",
-        font_size: el.font_size ?? 14,
-        text_color: el.text_color ?? "#000000",
-        bg_color: el.bg_color ?? "#ffffff",
-        bg_transparency: el.bg_transparency ?? 0,
-        alignment: el.alignment ?? "left",
-        text_wrap: el.text_wrap ?? false,
-        line_height: el.line_height ?? 1.2,
-        binding_config: el.binding_config ?? [],
-      }));
-
-    // 3️⃣ Prepare image elements
-    const imageElements = elements
-      .filter((el) => el.type === "image")
-      .map((el) => ({
-        id: el.id,
-        template_id: templateId,
-        x: el.x,
-        y: el.y,
-        width: el.width,
-        height: el.height,
-        z_index: el.z_index ?? 0,
-        image_url: el.image_url ?? "",
-        object_fit: el.object_fit ?? "contain",
-        binding_config: el.binding_config ?? [],
-      }));
-
-    // 4️⃣ Upsert text elements
-    if (textElements.length > 0) {
-      const { error: textError } = await supabase
-        .from("text_elements")
-        .upsert(textElements, { onConflict: "id" });
-
-      if (textError) throw textError;
+  const saveTemplate = async (): Promise<void> => {
+    if (!templateName.trim()) {
+      alert("Please enter a template name");
+      return;
     }
 
-    // 5️⃣ Upsert image elements
-    if (imageElements.length > 0) {
-      const { error: imageError } = await supabase
-        .from("image_elements")
-        .upsert(imageElements, { onConflict: "id" });
+    try {
+      const { data: templateData, error: templateError } = await supabase
+        .from("templates")
+        .upsert(
+          {
+            id: currentTemplateId ?? undefined,
+            name: templateName,
+            type: templateType,
+            background_img_url: backgroundUrl ?? null,
+          },
+          { onConflict: "id" }
+        )
+        .select()
+        .single();
 
-      if (imageError) throw imageError;
+      if (templateError || !templateData)
+        throw templateError ?? new Error("Failed to save template");
+
+      const templateId = templateData.id;
+
+      const textElements = elements
+        .filter((e) => e.type === "text")
+        .map((el) => ({
+          id: el.id,
+          template_id: templateId,
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height,
+          z_index: el.z_index ?? 0,
+          static_text: el.text ?? "",
+          font: el.font ?? "Poppins",
+          font_size: el.font_size ?? 14,
+          text_color: el.text_color ?? "#000000",
+          bg_color: el.bg_color ?? "#ffffff",
+          bg_transparency: el.bg_transparency ?? 0,
+          alignment: el.alignment ?? "left",
+          text_wrap: el.text_wrap ?? false,
+          line_height: el.line_height ?? 1.2,
+          binding_config: el.binding_config ?? [],
+        }));
+
+      const imageElements = elements
+        .filter((e) => e.type === "image")
+        .map((el) => ({
+          id: el.id,
+          template_id: templateId,
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height,
+          z_index: el.z_index ?? 0,
+          image_url: el.image_url ?? "",
+          object_fit: el.object_fit ?? "contain",
+          binding_config: el.binding_config ?? [],
+          qr_text: el.qr_text ?? "", // <-- save QR text
+        }));
+
+      if (textElements.length > 0) {
+        const { error } = await supabase.from("text_elements").upsert(textElements, {
+          onConflict: "id",
+        });
+        if (error) throw error;
+      }
+
+      if (imageElements.length > 0) {
+        const { error } = await supabase.from("image_elements").upsert(imageElements, {
+          onConflict: "id",
+        });
+        if (error) throw error;
+      }
+
+      alert("Template saved successfully!");
+      setCurrentTemplateId(templateId);
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("Save failed");
     }
+  };
 
-    alert("Template saved successfully!");
-    setCurrentTemplateId(templateId);
-  } catch (err: unknown) {
-    console.error("Save failed:", err);
-    if (err instanceof Error) alert(`Save failed: ${err.message}`);
-    else alert("Save failed: unknown error");
-  }
-};
-
-
-
-
+  // --------------------------------------------------
+  // Render
+  // --------------------------------------------------
 
   return (
     <div className="h-[88vh] flex flex-col">
       <div className="flex-1 flex overflow-hidden">
         <div>
-          {/* Save Button */}
           <div className="p-4 bg-gray-50 flex justify-center">
             <button
               onClick={saveTemplate}
@@ -256,13 +274,12 @@ const saveTemplate = async (): Promise<void> => {
             </button>
           </div>
 
-        
-        <LeftSidebar
-          elements={elements}
-          setElements={setElements}
-          selectedId={selectedId}
-          setSelectedId={setSelectedId}
-        />
+          <LeftSidebar
+            elements={elements}
+            setElements={setElements}
+            selectedId={selectedId}
+            setSelectedId={setSelectedId}
+          />
         </div>
 
         <ZoomableCanvas
@@ -285,10 +302,10 @@ const saveTemplate = async (): Promise<void> => {
           tables={tables}
           loadingSchema={loadingSchema}
           schemaError={schemaError}
+          templateName={templateName}               
+          setTemplateName={setTemplateName}   
         />
       </div>
-
-
     </div>
   );
 }

@@ -13,6 +13,8 @@ interface RightSidebarProps {
   tables: Types.TableSchema[];
   loadingSchema: boolean;
   schemaError: string | null;
+  templateName: string; // template name field
+  setTemplateName: React.Dispatch<React.SetStateAction<string>>; // template name setter
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -25,6 +27,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   tables,
   loadingSchema,
   schemaError,
+  templateName,
+  setTemplateName,
 }) => {
   const selectedElement =
     elements.find((el) => el.id === selectedId) || null;
@@ -50,7 +54,11 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
   const addBinding = () => {
     if (!selectedElement) return;
-    const newBinding: Types.BindingConfig = { source: "", field: "", fallback: "" };
+    const newBinding: Types.BindingConfig = {
+      source: "",
+      field: "",
+      fallback: "",
+    };
     updateElement("binding_config", [
       ...(selectedElement.binding_config || []),
       newBinding,
@@ -59,17 +67,29 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
   const removeBinding = (index: number) => {
     if (!selectedElement) return;
-    const updated = (selectedElement.binding_config || []).filter((_, i) => i !== index);
+    const updated = (selectedElement.binding_config || []).filter(
+      (_, i) => i !== index
+    );
     updateElement("binding_config", updated);
   };
-
-
 
   return (
     <aside className="w-80 border-l bg-white p-4 overflow-y-auto">
       <h2 className="text-lg font-semibold mb-3">Properties</h2>
 
-      {/* Background URL only when nothing is selected */}
+      {!selectedElement && (
+        <div className="mb-4">
+          <label className="block mb-1">Template Name</label>
+          <input
+            type="text"
+            className="border rounded p-1 w-full"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+            placeholder="Enter template name"
+          />
+        </div>
+      )}
+
       {!selectedElement && (
         <div className="mb-4">
           <label className="block mb-1">Background Image URL</label>
@@ -100,7 +120,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               value={selectedElement.x}
               onChange={(e) => updateElement("x", Number(e.target.value))}
             />
-
             <label className="block mt-2 mb-1">Y Position</label>
             <input
               type="number"
@@ -119,7 +138,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               value={selectedElement.width}
               onChange={(e) => updateElement("width", Number(e.target.value))}
             />
-
             <label className="block mt-2 mb-1">Height</label>
             <input
               type="number"
@@ -129,7 +147,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             />
           </div>
 
-          {/* Z Index */}
+          {/* Z-index */}
           <div className="mb-4">
             <label className="block mb-1">Z Index</label>
             <input
@@ -140,7 +158,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             />
           </div>
 
-          {/* Text options */}
+          {/* Text Element */}
           {selectedElement.type === "text" && (
             <>
               <div className="mb-4">
@@ -150,7 +168,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   value={selectedElement.text || ""}
                   onChange={(e) => updateElement("text", e.target.value)}
                   rows={3}
-                  placeholder="Enter text. Press Enter for new lines."
+                  placeholder="Enter text. Supports multi-line."
                   style={{ whiteSpace: "pre-wrap", overflowWrap: "break-word" }}
                 />
               </div>
@@ -204,17 +222,22 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   max={1}
                   className="border rounded p-1 w-full"
                   value={selectedElement.bg_transparency || 0}
-                  onChange={(e) => updateElement("bg_transparency", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateElement("bg_transparency", Number(e.target.value))
+                  }
                 />
               </div>
 
               <div className="mb-4">
                 <label className="block mb-1">Text Align</label>
                 <select
-                  className="border rounded p-1 mt-1 w-full"
+                  className="border rounded p-1 w-full"
                   value={selectedElement.alignment || "left"}
                   onChange={(e) =>
-                    updateElement("alignment", e.target.value as Types.EditorElement["alignment"])
+                    updateElement(
+                      "alignment",
+                      e.target.value as Types.EditorElement["alignment"]
+                    )
                   }
                 >
                   <option value="left">Left</option>
@@ -242,13 +265,15 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   step={0.1}
                   className="border rounded p-1 w-full"
                   value={selectedElement.line_height || 1.2}
-                  onChange={(e) => updateElement("line_height", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateElement("line_height", Number(e.target.value))
+                  }
                 />
               </div>
             </>
           )}
 
-          {/* Image options */}
+          {/* Image Element */}
           {selectedElement.type === "image" && (
             <>
               <div className="mb-4">
@@ -261,13 +286,28 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 />
               </div>
 
+              {/* QR Text */}
+              <div className="mb-4">
+                <label className="block mb-1">QR Text</label>
+                <input
+                  type="text"
+                  className="border rounded p-1 w-full"
+                  value={selectedElement.qr_text || ""}
+                  onChange={(e) => updateElement("qr_text", e.target.value)}
+                  placeholder="Enter data to generate QR"
+                />
+              </div>
+
               <div className="mb-4">
                 <label className="block mb-1">Object Fit</label>
                 <select
-                  className="border rounded p-1 mt-1 w-full"
+                  className="border rounded p-1 w-full"
                   value={selectedElement.object_fit || "contain"}
                   onChange={(e) =>
-                    updateElement("object_fit", e.target.value as Types.EditorElement["object_fit"])
+                    updateElement(
+                      "object_fit",
+                      e.target.value as Types.EditorElement["object_fit"]
+                    )
                   }
                 >
                   <option value="contain">Contain</option>
@@ -280,29 +320,37 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             </>
           )}
 
-          {/* Bindings */}
+          {/* Bindings Section */}
           <div className="mt-6">
             <h3 className="font-semibold mb-3">Bindings</h3>
-
-            {loadingSchema && <p className="text-sm text-gray-500">Loading database schema…</p>}
-            {schemaError && <p className="text-sm text-red-500">{schemaError}</p>}
-
+            {loadingSchema && (
+              <p className="text-sm text-gray-500">Loading database schema…</p>
+            )}
+            {schemaError && (
+              <p className="text-sm text-red-500">{schemaError}</p>
+            )}
             <button
               onClick={addBinding}
               className="mb-3 px-3 py-1 rounded bg-blue-600 text-white text-sm"
             >
               Add Binding
             </button>
-
             {(selectedElement.binding_config || []).map((binding, index) => (
-              <div key={index} className="border p-3 rounded mb-4 bg-gray-50 space-y-2">
+              <div
+                key={index}
+                className="border p-3 rounded mb-4 bg-gray-50 space-y-2"
+              >
                 <div>
                   <label className="block mb-1">Source Table</label>
                   <select
-                    className="border rounded p-1 mt-1 w-full"
+                    className="border rounded p-1 w-full"
                     value={binding.source}
                     onChange={(e) =>
-                      updateBinding(index, { ...binding, source: e.target.value, field: "" })
+                      updateBinding(index, {
+                        ...binding,
+                        source: e.target.value,
+                        field: "",
+                      })
                     }
                   >
                     <option value="">Select table</option>
@@ -318,10 +366,13 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   <div>
                     <label className="block mb-1">Field</label>
                     <select
-                      className="border rounded p-1 mt-1 w-full"
+                      className="border rounded p-1 w-full"
                       value={binding.field}
                       onChange={(e) =>
-                        updateBinding(index, { ...binding, field: e.target.value })
+                        updateBinding(index, {
+                          ...binding,
+                          field: e.target.value,
+                        })
                       }
                     >
                       <option value="">Select field</option>
@@ -343,7 +394,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                     className="border rounded p-1 w-full"
                     value={binding.fallback || ""}
                     onChange={(e) =>
-                      updateBinding(index, { ...binding, fallback: e.target.value })
+                      updateBinding(index, {
+                        ...binding,
+                        fallback: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -357,7 +411,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
             ))}
           </div>
-
         </div>
       )}
     </aside>

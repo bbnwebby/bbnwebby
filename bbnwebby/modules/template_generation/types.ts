@@ -27,6 +27,7 @@ export interface EditorElement {
   text_wrap?: boolean;
   line_height?: number;
   image_url?: string;
+  qr_text?: string;
   object_fit?: "contain" | "cover" | "fill" | "none" | "scale-down";
   binding_config?: BindingConfig[];
 }
@@ -66,6 +67,7 @@ export interface ImageElementRow {
   height: string | number;
   z_index: number | null;
   image_url: string;
+  qr_text?: string;
   object_fit: "contain" | "cover" | "fill" | "none" | "scale-down" | null;
   binding_config: BindingConfig[] | null;
 }

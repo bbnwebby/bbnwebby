@@ -23,6 +23,7 @@ export interface EditorElement {
   bg_color?: string;
   bg_transparency?: number;
   alignment?: "left" | "center" | "right" | "justify";
+  static_text?: string;
   text_wrap?: boolean;
   line_height?: number;
   image_url?: string;
@@ -89,3 +90,5 @@ export interface EditorState {
   backgroundUrl: string | null;
   setBackgroundUrl: Dispatch<SetStateAction<string | null>>;
 }
+
+

@@ -5,7 +5,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import TemplateGrid from "./templatesGrid";
 import Editor from "./Editor";
-import * as Types from "../types";
 
 // ============================================
 // MAIN COMPONENT

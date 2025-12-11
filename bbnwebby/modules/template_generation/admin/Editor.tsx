@@ -1,3 +1,5 @@
+// modules\template_generation\admin\Editor.tsx
+
 "use client";
 
 import React, { JSX, useEffect, useState } from "react";
@@ -13,9 +15,6 @@ export default function TemplateEditor(): JSX.Element {
   const modeParam = searchParams.get("mode"); // "create" | "edit" | null
   const templateIdParam = searchParams.get("template_id"); // string | null
 
-  // Mode: grid, create, or edit
-  const [mode, setMode] = useState<"grid" | "create" | "edit">("grid");
-
   // Editor state
   const [elements, setElements] = useState<Types.EditorElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -28,11 +27,7 @@ export default function TemplateEditor(): JSX.Element {
 
   // Canvas
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
-  const [zoom, setZoom] = useState<number>(1);
 
-  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setZoom(parseFloat(e.target.value));
-  };
 
   // Adjust canvas size when background changes
   useEffect(() => {
@@ -99,7 +94,7 @@ export default function TemplateEditor(): JSX.Element {
 
       setElements(loadedElements);
       setSelectedId(null);
-      setMode("edit");
+
     } catch (err) {
       console.error("Failed to load template:", err);
       alert("Failed to load template");
@@ -114,15 +109,13 @@ export default function TemplateEditor(): JSX.Element {
         loadTemplate(templateIdParam);
       }
     } else if (modeParam === "create") {
-      setMode("create");
+
       setElements([]);
       setBackgroundUrl(null);
       setSelectedId(null);
       setCurrentTemplateId(null);
       setTemplateName("");
       setTemplateType("certificate");
-    } else {
-      setMode("grid");
     }
   }, [modeParam, templateIdParam]);
 
@@ -151,21 +144,103 @@ export default function TemplateEditor(): JSX.Element {
   }, []);
 
   // Save template
-  const saveTemplate = async (): Promise<void> => {
-    if (!templateName.trim()) {
-      alert("Please enter a template name");
-      return;
-    }
-    // Saving logic remains the same as your previous implementation
-    alert("Save functionality coming soon!");
-  };
-
-  // =====================================================
-  // Render
-  // =====================================================
-  if (mode === "grid") {
-    return <div className="h-screen bg-gray-100 p-8">{/* TODO: grid view */}</div>;
+// Save template to Supabase
+// Save template to Supabase
+const saveTemplate = async (): Promise<void> => {
+  if (!templateName.trim()) {
+    alert("Please enter a template name");
+    return;
   }
+
+  try {
+    // 1️⃣ Upsert the template itself
+    const { data: templateData, error: templateError } = await supabase
+      .from("templates")
+      .upsert(
+        {
+          id: currentTemplateId ?? undefined,
+          name: templateName,
+          type: templateType,
+          background_img_url: backgroundUrl ?? null,
+        },
+        { onConflict: "id" }
+      )
+      .select()
+      .single();
+
+    if (templateError || !templateData) throw templateError ?? new Error("Failed to save template");
+
+    const templateId = templateData.id;
+
+    // 2️⃣ Prepare text elements
+    const textElements = elements
+      .filter((el) => el.type === "text")
+      .map((el) => ({
+        id: el.id,
+        template_id: templateId,
+        x: el.x,
+        y: el.y,
+        width: el.width,
+        height: el.height,
+        z_index: el.z_index ?? 0,
+        static_text: el.text ?? "",
+        font: el.font ?? "Poppins",
+        font_size: el.font_size ?? 14,
+        text_color: el.text_color ?? "#000000",
+        bg_color: el.bg_color ?? "#ffffff",
+        bg_transparency: el.bg_transparency ?? 0,
+        alignment: el.alignment ?? "left",
+        text_wrap: el.text_wrap ?? false,
+        line_height: el.line_height ?? 1.2,
+        binding_config: el.binding_config ?? [],
+      }));
+
+    // 3️⃣ Prepare image elements
+    const imageElements = elements
+      .filter((el) => el.type === "image")
+      .map((el) => ({
+        id: el.id,
+        template_id: templateId,
+        x: el.x,
+        y: el.y,
+        width: el.width,
+        height: el.height,
+        z_index: el.z_index ?? 0,
+        image_url: el.image_url ?? "",
+        object_fit: el.object_fit ?? "contain",
+        binding_config: el.binding_config ?? [],
+      }));
+
+    // 4️⃣ Upsert text elements
+    if (textElements.length > 0) {
+      const { error: textError } = await supabase
+        .from("text_elements")
+        .upsert(textElements, { onConflict: "id" });
+
+      if (textError) throw textError;
+    }
+
+    // 5️⃣ Upsert image elements
+    if (imageElements.length > 0) {
+      const { error: imageError } = await supabase
+        .from("image_elements")
+        .upsert(imageElements, { onConflict: "id" });
+
+      if (imageError) throw imageError;
+    }
+
+    alert("Template saved successfully!");
+    setCurrentTemplateId(templateId);
+  } catch (err: unknown) {
+    console.error("Save failed:", err);
+    if (err instanceof Error) alert(`Save failed: ${err.message}`);
+    else alert("Save failed: unknown error");
+  }
+};
+
+
+
+
 
   return (
     <div className="h-screen flex flex-col">
@@ -198,24 +273,6 @@ export default function TemplateEditor(): JSX.Element {
           loadingSchema={loadingSchema}
           schemaError={schemaError}
         />
-      </div>
-
-      {/* Zoom Slider */}
-      <div className="p-4 bg-gray-50 flex items-center gap-2">
-        <label htmlFor="zoom" className="text-sm font-medium">
-          Zoom:
-        </label>
-        <input
-          id="zoom"
-          type="range"
-          min={0.1}
-          max={3}
-          step={0.05}
-          value={zoom}
-          onChange={handleZoomChange}
-          className="w-full"
-        />
-        <span className="text-sm">{Math.round(zoom * 100)}%</span>
       </div>
 
       {/* Save Button */}

@@ -1,61 +1,11 @@
+// modules\template_generation\admin\templatesTab.tsx
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import TemplateGrid from "./templatesGrid";
 import Editor from "./Editor";
-
-// ============================================
-// TYPES (LOCAL TO THIS FILE)
-// ============================================
-
-interface BindingConfig {
-  source: "user_profiles" | "makeup_artists";
-  field: string;
-  fallback?: string;
-  transform?: "uppercase" | "lowercase" | "capitalize";
-}
-
-interface EditorElement {
-  id: string;
-  type: "text" | "image";
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  z_index: number;
-  text?: string;
-  font_size?: number;
-  font?: string;
-  text_color?: string;
-  bg_color?: string;
-  bg_transparency?: number;
-  alignment?: "left" | "center" | "right" | "justify";
-  text_wrap?: boolean;
-  line_height?: number;
-  image_url?: string;
-  object_fit?: "contain" | "cover" | "fill" | "none" | "scale-down";
-  binding_config?: BindingConfig[];
-}
-
-interface Template {
-  id: string;
-  name: string;
-  type: "certificate" | "id_card";
-  background_img_url: string | null;
-}
-
-// Props needed by Editor based on current usage
-interface EditorProps {
-  state: {
-    elements: EditorElement[];
-    setElements: React.Dispatch<React.SetStateAction<EditorElement[]>>;
-    selectedId: string | null;
-    setSelectedId: React.Dispatch<React.SetStateAction<string | null>>;
-    backgroundUrl: string | null;
-    setBackgroundUrl: React.Dispatch<React.SetStateAction<string | null>>;
-  };
-}
+import * as Types from "../types";
 
 // ============================================
 // MAIN COMPONENT
@@ -71,9 +21,7 @@ function TemplatesTabContent() {
   // --------------------------------------------
   // Editor UI State
   // --------------------------------------------
-  const [elements, setElements] = useState<EditorElement[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
+
   const [loadedTemplateId, setLoadedTemplateId] = useState<string | null>(null);
 
   // --------------------------------------------
@@ -85,19 +33,11 @@ function TemplatesTabContent() {
       if (mode === "edit" && templateId && templateId !== loadedTemplateId) {
         // TODO: Load template from Supabase here
 
-        // Reset for now (placeholder)
-        setElements([]);
-        setSelectedId(null);
-        setBackgroundUrl(null);
-
         setLoadedTemplateId(templateId);
       }
 
       // Creating New Template → Reset Editor
       else if (mode === "create" && loadedTemplateId !== null) {
-        setElements([]);
-        setSelectedId(null);
-        setBackgroundUrl(null);
         setLoadedTemplateId(null);
       }
     };
@@ -112,32 +52,13 @@ function TemplatesTabContent() {
     router.push(`/admin?tab=templates`);
   };
 
-  // --------------------------------------------
-  // Save template (placeholder – actual Supabase logic to be added)
-  // --------------------------------------------
-  const handleSaveTemplate = async () => {
-    console.log("Saving template...", {
-      mode,
-      templateId,
-      elements,
-      backgroundUrl,
-    });
 
-    alert("Save functionality coming soon!");
-  };
 
   // --------------------------------------------
   // SHOW EDITOR (in create or edit mode)
   // --------------------------------------------
   if (mode === "create" || mode === "edit") {
-    const editorState: EditorProps["state"] = {
-      elements,
-      setElements,
-      selectedId,
-      setSelectedId,
-      backgroundUrl,
-      setBackgroundUrl,
-    };
+
 
     return (
       <div className="space-y-4">
@@ -155,12 +76,6 @@ function TemplatesTabContent() {
             </h2>
           </div>
 
-          <button
-            onClick={handleSaveTemplate}
-            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            Save Template
-          </button>
         </div>
 
         {/* Editor */}

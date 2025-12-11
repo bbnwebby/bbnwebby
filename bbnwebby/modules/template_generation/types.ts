@@ -1,15 +1,14 @@
-// ============================================
-// TYPES
-// ============================================
+// modules\template_generation\admin\types.tsx
 
-interface BindingConfig {
-  source: "user_profiles" | "makeup_artists";
+import { Dispatch, SetStateAction } from "react";
+
+export interface BindingConfig {
+  source: string;
   field: string;
   fallback?: string;
-  transform?: "uppercase" | "lowercase" | "capitalize";
 }
 
-interface EditorElement {
+export interface EditorElement {
   id: string;
   type: "text" | "image";
   x: number;
@@ -31,9 +30,62 @@ interface EditorElement {
   binding_config?: BindingConfig[];
 }
 
-interface Template {
+export interface Template {
   id: string;
   name: string;
   type: "certificate" | "id_card";
   background_img_url: string | null;
+}
+
+// DB row types for mapping
+export interface TextElementRow {
+  id: string;
+  x: string | number;
+  y: string | number;
+  width: string | number;
+  height: string | number;
+  z_index: number | null;
+  static_text: string | null;
+  font_size: number | null;
+  font: string | null;
+  text_color: string | null;
+  bg_color: string | null;
+  bg_transparency: number | null;
+  alignment: "left" | "center" | "right" | "justify" | null;
+  text_wrap: boolean | null;
+  line_height: number | null;
+  binding_config: BindingConfig[] | null;
+}
+
+export interface ImageElementRow {
+  id: string;
+  x: string | number;
+  y: string | number;
+  width: string | number;
+  height: string | number;
+  z_index: number | null;
+  image_url: string;
+  object_fit: "contain" | "cover" | "fill" | "none" | "scale-down" | null;
+  binding_config: BindingConfig[] | null;
+}
+
+export interface TableSchema {
+  table_name: string;
+  columns: string[];
+}
+
+/*
+
+/*
+ ===========================================
+ EditorState
+ ===========================================
+*/
+export interface EditorState {
+  elements: EditorElement[];
+  setElements: Dispatch<SetStateAction<EditorElement[]>>;
+  selectedId: string | null;
+  setSelectedId: Dispatch<SetStateAction<string | null>>;
+  backgroundUrl: string | null;
+  setBackgroundUrl: Dispatch<SetStateAction<string | null>>;
 }

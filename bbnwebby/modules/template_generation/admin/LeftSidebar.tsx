@@ -1,11 +1,14 @@
+// modules\template_generation\admin\LeftSidebar.tsx
 "use client";
 
 import React from "react";
 import { v4 as uuid } from "uuid";
+import * as Types from "../types";
+
 
 interface LeftSidebarProps {
-  elements: EditorElement[];
-  setElements: (elements: EditorElement[]) => void;
+  elements: Types.EditorElement[];
+  setElements: (elements: Types.EditorElement[]) => void;
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
 }
@@ -17,7 +20,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   setSelectedId
 }) => {
   const addText = () => {
-    const newEl: EditorElement = {
+    const newEl: Types.EditorElement = {
       id: uuid(),
       type: "text",
       text: "New Text",
@@ -40,7 +43,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   };
 
   const addImage = () => {
-    const newEl: EditorElement = {
+    const newEl: Types.EditorElement = {
       id: uuid(),
       type: "image",
       image_url: "https://via.placeholder.com/200",

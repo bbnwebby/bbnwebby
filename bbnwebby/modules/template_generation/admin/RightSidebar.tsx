@@ -1,424 +1,318 @@
+// modules\template_generation\admin\RightSidebar.tsx
 "use client";
 
 import React from "react";
+import { TableSchema } from "../types";
+import * as Types from "../types";
 
-interface BindingConfig {
-  source: "user_profiles" | "makeup_artists";
-  field: string;
-  fallback?: string;
-  transform?: "uppercase" | "lowercase" | "capitalize";
-}
-
-interface EditorElement {
-  id: string;
-  type: "text" | "image";
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  z_index: number;
-  text?: string;
-  font_size?: number;
-  font?: string;
-  text_color?: string;
-  bg_color?: string;
-  bg_transparency?: number;
-  alignment?: "left" | "center" | "right" | "justify";
-  text_wrap?: boolean;
-  line_height?: number;
-  image_url?: string;
-  object_fit?: "contain" | "cover" | "fill" | "none" | "scale-down";
-  binding_config?: BindingConfig[];
-}
-
+// ========================================================
+// PROPS
+// ========================================================
 interface RightSidebarProps {
-  elements: EditorElement[];
-  setElements: (elements: EditorElement[]) => void;
+  elements: Types.EditorElement[];
+  setElements: React.Dispatch<React.SetStateAction<Types.EditorElement[]>>;
   selectedId: string | null;
-  setSelectedId: (id: string | null) => void;
+  setSelectedId: React.Dispatch<React.SetStateAction<string | null>>;
   backgroundUrl: string | null;
-  setBackgroundUrl: (url: string | null) => void;
+  setBackgroundUrl: React.Dispatch<React.SetStateAction<string | null>>;
+
+  tables: TableSchema[];
+  loadingSchema: boolean;
+  schemaError: string | null;
 }
 
-export const RightSidebar: React.FC<RightSidebarProps> = ({ 
-  elements, 
-  setElements, 
+// ========================================================
+// COMPONENT
+// ========================================================
+const RightSidebar: React.FC<RightSidebarProps> = ({
+  elements,
+  setElements,
   selectedId,
   setSelectedId,
-  backgroundUrl, 
-  setBackgroundUrl 
+  backgroundUrl,
+  setBackgroundUrl,
+  tables,
+  loadingSchema,
+  schemaError,
 }) => {
-  const selectedElement = elements.find((el) => el.id === selectedId);
+  const selectedElement =
+    elements.find((el) => el.id === selectedId) || null;
 
-  const updateSelected = (updates: Partial<EditorElement>) => {
-    setElements(
-      elements.map((el) =>
-        el.id === selectedElement?.id ? { ...el, ...updates } : el
+  const updateElement = <K extends keyof Types.EditorElement>(
+    key: K,
+    value: Types.EditorElement[K]
+  ) => {
+    if (!selectedElement) return;
+    setElements((prev) =>
+      prev.map((el) =>
+        el.id === selectedElement.id ? { ...el, [key]: value } : el
       )
     );
   };
 
-  const deleteSelected = () => {
-    setElements(elements.filter((el) => el.id !== selectedId));
-    setSelectedId(null);
+  const updateBinding = (index: number, updated: Types.BindingConfig) => {
+    if (!selectedElement) return;
+    const list = [...(selectedElement.binding_config || [])];
+    list[index] = updated;
+    updateElement("binding_config", list);
   };
 
   const addBinding = () => {
-    const currentBindings = selectedElement?.binding_config || [];
-    updateSelected({
-      binding_config: [
-        ...currentBindings,
-        {
-          source: "user_profiles",
-          field: "",
-          fallback: "",
-          transform: undefined
-        }
-      ]
-    });
-  };
-
-  const updateBinding = (index: number, updates: Partial<BindingConfig>) => {
-    const currentBindings = selectedElement?.binding_config || [];
-    const newBindings = [...currentBindings];
-    newBindings[index] = { ...newBindings[index], ...updates };
-    updateSelected({ binding_config: newBindings });
+    if (!selectedElement) return;
+    const newBinding: Types.BindingConfig = {
+      source: "",
+      field: "",
+      fallback: "",
+    };
+    updateElement("binding_config", [
+      ...(selectedElement.binding_config || []),
+      newBinding,
+    ]);
   };
 
   const removeBinding = (index: number) => {
-    const currentBindings = selectedElement?.binding_config || [];
-    updateSelected({
-      binding_config: currentBindings.filter((_, i) => i !== index)
-    });
+    if (!selectedElement) return;
+    const updated = (selectedElement.binding_config || []).filter(
+      (_, i) => i !== index
+    );
+    updateElement("binding_config", updated);
   };
 
-  if (!selectedElement) {
-    return (
-      <div className="w-80 border-l bg-gray-50 p-4 overflow-y-auto">
-        <h2 className="font-semibold mb-4">Properties</h2>
-        
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Background Image URL</label>
-          <input
-            type="text"
-            value={backgroundUrl || ''}
-            onChange={(e) => setBackgroundUrl(e.target.value)}
-            className="w-full border rounded p-2 text-sm"
-            placeholder="https://example.com/image.jpg"
-          />
-        </div>
-
-        <p className="text-gray-500 text-sm">Select an element to edit its properties</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-80 border-l bg-gray-50 p-4 overflow-y-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold">Properties</h2>
-        <button
-          onClick={deleteSelected}
-          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-        >
-          Delete
-        </button>
+    <aside className="w-80 border-l bg-white p-4 overflow-y-auto">
+      <h2 className="text-lg font-semibold mb-3">Properties</h2>
+
+      {/* Background */}
+      <div className="mb-4">
+        <label className="block mb-1">Background Image URL</label>
+        <input
+          type="text"
+          className="border rounded p-1 w-full"
+          value={backgroundUrl || ""}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setBackgroundUrl(e.target.value)
+          }
+          placeholder="https://example.com/bg.png"
+        />
       </div>
 
-      <div className="space-y-3">
-        {/* Position & Size */}
+      {!selectedElement && (
+        <p className="text-sm text-gray-500">
+          Select an element to edit its properties.
+        </p>
+      )}
+
+      {selectedElement && (
         <div>
-          <label className="block text-sm font-medium mb-1">X Position</label>
-          <input
-            type="number"
-            value={selectedElement.x}
-            onChange={(e) => updateSelected({ x: parseFloat(e.target.value) || 0 })}
-            className="w-full border rounded p-2"
-          />
-        </div>
+          {/* Position */}
+          <div className="mb-4">
+            <label className="block mb-1">X Position</label>
+            <input
+              type="number"
+              className="border rounded p-1 w-full"
+              value={selectedElement.x}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updateElement("x", Number(e.target.value))
+              }
+            />
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Y Position</label>
-          <input
-            type="number"
-            value={selectedElement.y}
-            onChange={(e) => updateSelected({ y: parseFloat(e.target.value) || 0 })}
-            className="w-full border rounded p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Width</label>
-          <input
-            type="number"
-            value={selectedElement.width}
-            onChange={(e) => updateSelected({ width: parseFloat(e.target.value) || 0 })}
-            className="w-full border rounded p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Height</label>
-          <input
-            type="number"
-            value={selectedElement.height}
-            onChange={(e) => updateSelected({ height: parseFloat(e.target.value) || 0 })}
-            className="w-full border rounded p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Z Index</label>
-          <input
-            type="number"
-            value={selectedElement.z_index}
-            onChange={(e) => updateSelected({ z_index: parseInt(e.target.value) || 0 })}
-            className="w-full border rounded p-2"
-          />
-        </div>
-
-        {/* Text Element Properties */}
-        {selectedElement.type === "text" && (
-          <>
-            <div>
-              <label className="block text-sm font-medium mb-1">Text</label>
-              <textarea
-                value={selectedElement.text || ""}
-                onChange={(e) => updateSelected({ text: e.target.value })}
-                className="w-full border rounded p-2"
-                rows={3}
-                placeholder="Static text or preview text"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                This will be replaced by bound data if bindings are configured
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Font Size</label>
-              <input
-                type="number"
-                value={selectedElement.font_size || 16}
-                onChange={(e) => updateSelected({ font_size: parseInt(e.target.value) || 16 })}
-                className="w-full border rounded p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Font Family</label>
-              <input
-                type="text"
-                value={selectedElement.font || "Poppins"}
-                onChange={(e) => updateSelected({ font: e.target.value })}
-                className="w-full border rounded p-2"
-                placeholder="Poppins, Arial, etc."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Text Color</label>
-              <input
-                type="color"
-                value={selectedElement.text_color || "#000000"}
-                onChange={(e) => updateSelected({ text_color: e.target.value })}
-                className="w-full p-1 h-10"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Background Color</label>
-              <input
-                type="color"
-                value={selectedElement.bg_color || "#ffffff"}
-                onChange={(e) => updateSelected({ bg_color: e.target.value })}
-                className="w-full p-1 h-10"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Background Transparency</label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={selectedElement.bg_transparency || 0}
-                onChange={(e) => updateSelected({ bg_transparency: parseFloat(e.target.value) })}
-                className="w-full"
-              />
-              <span className="text-xs text-gray-600">{selectedElement.bg_transparency || 0}</span>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Alignment</label>
-              <select
-                value={selectedElement.alignment || "left"}
-                onChange={(e) => updateSelected({ alignment: e.target.value as "left" | "center" | "right" | "justify" })}
-                className="w-full border rounded p-2"
-              >
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-                <option value="justify">Justify</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Line Height</label>
-              <input
-                type="number"
-                step="0.1"
-                value={selectedElement.line_height || 1.2}
-                onChange={(e) => updateSelected({ line_height: parseFloat(e.target.value) || 1.2 })}
-                className="w-full border rounded p-2"
-              />
-            </div>
-
-            <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedElement.text_wrap || false}
-                  onChange={(e) => updateSelected({ text_wrap: e.target.checked })}
-                  className="mr-2"
-                />
-                <span className="text-sm font-medium">Text Wrap</span>
-              </label>
-            </div>
-          </>
-        )}
-
-        {/* Image Element Properties */}
-        {selectedElement.type === "image" && (
-          <>
-            <div>
-              <label className="block text-sm font-medium mb-1">Image URL</label>
-              <input
-                type="text"
-                value={selectedElement.image_url || ""}
-                onChange={(e) => updateSelected({ image_url: e.target.value })}
-                className="w-full border rounded p-2"
-                placeholder="https://example.com/image.jpg"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Static image or preview image
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Object Fit</label>
-              <select
-                value={selectedElement.object_fit || "contain"}
-                onChange={(e) => updateSelected({ object_fit: e.target.value as "contain" | "cover" | "fill" | "none" | "scale-down" })}
-                className="w-full border rounded p-2"
-              >
-                <option value="contain">Contain</option>
-                <option value="cover">Cover</option>
-                <option value="fill">Fill</option>
-                <option value="none">None</option>
-                <option value="scale-down">Scale Down</option>
-              </select>
-            </div>
-          </>
-        )}
-
-        {/* Data Binding Configuration */}
-        <div className="mt-6 pt-4 border-t border-gray-300">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-semibold text-sm">Data Bindings</h3>
-            <button
-              onClick={addBinding}
-              className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
-            >
-              + Add Binding
-            </button>
+            <label className="block mt-2 mb-1">Y Position</label>
+            <input
+              type="number"
+              className="border rounded p-1 w-full"
+              value={selectedElement.y}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updateElement("y", Number(e.target.value))
+              }
+            />
           </div>
 
-          {(!selectedElement.binding_config || selectedElement.binding_config.length === 0) && (
-            <p className="text-xs text-gray-500 italic">
-              No data bindings configured. Click Add Binding to connect this element to dynamic data.
-            </p>
+          {/* Size */}
+          <div className="mb-4">
+            <label className="block mb-1">Width</label>
+            <input
+              type="number"
+              className="border rounded p-1 w-full"
+              value={selectedElement.width}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updateElement("width", Number(e.target.value))
+              }
+            />
+
+            <label className="block mt-2 mb-1">Height</label>
+            <input
+              type="number"
+              className="border rounded p-1 w-full"
+              value={selectedElement.height}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updateElement("height", Number(e.target.value))
+              }
+            />
+          </div>
+
+          {/* Text options */}
+          {selectedElement.type === "text" && (
+            <>
+              <div className="mb-4">
+                <label className="block mb-1">Text</label>
+                <input
+                  type="text"
+                  className="border rounded p-1 w-full"
+                  value={selectedElement.text || ""}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateElement("text", e.target.value)
+                  }
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1">Font Size</label>
+                <input
+                  type="number"
+                  className="border rounded p-1 w-full"
+                  value={selectedElement.font_size || 16}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateElement("font_size", Number(e.target.value))
+                  }
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1">Text Color</label>
+                <input
+                  type="color"
+                  className="border rounded p-1 w-full h-10"
+                  value={selectedElement.text_color || "#000000"}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateElement("text_color", e.target.value)
+                  }
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1">Text Align</label>
+                <select
+                  className="border rounded p-1 mt-1 w-full"
+                  value={selectedElement.alignment || "left"}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateElement(
+                      "alignment",
+                      e.target.value as Types.EditorElement["alignment"]
+                    )
+                  }
+                >
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                  <option value="justify">Justify</option>
+                </select>
+              </div>
+            </>
           )}
 
-          {selectedElement.binding_config && selectedElement.binding_config.length > 0 && (
-            <div className="space-y-4">
-              {selectedElement.binding_config.map((binding, index) => (
-                <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg space-y-2">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-semibold text-gray-700">Binding #{index + 1}</span>
-                    <button
-                      onClick={() => removeBinding(index)}
-                      className="text-red-600 hover:text-red-800 text-xs"
-                    >
-                      Remove
-                    </button>
-                  </div>
+          {/* Bindings */}
+          <div className="mt-6">
+            <h3 className="font-semibold mb-3">Bindings</h3>
 
+            {loadingSchema && (
+              <p className="text-sm text-gray-500">Loading database schema…</p>
+            )}
+            {schemaError && (
+              <p className="text-sm text-red-500">{schemaError}</p>
+            )}
+
+            <button
+              onClick={addBinding}
+              className="mb-3 px-3 py-1 rounded bg-blue-600 text-white text-sm"
+            >
+              Add Binding
+            </button>
+
+            {(selectedElement.binding_config || []).map(
+              (binding, index) => (
+                <div
+                  key={index}
+                  className="border p-3 rounded mb-4 bg-gray-50 space-y-2"
+                >
+                  {/* Source table */}
                   <div>
-                    <label className="block text-xs font-medium mb-1">Data Source</label>
+                    <label className="block mb-1">Source Table</label>
                     <select
+                      className="border rounded p-1 mt-1 w-full"
                       value={binding.source}
-                      onChange={(e) => updateBinding(index, { 
-                        source: e.target.value as "user_profiles" | "makeup_artists" 
-                      })}
-                      className="w-full border rounded p-1.5 text-sm"
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                        updateBinding(index, {
+                          ...binding,
+                          source: e.target.value,
+                          field: "",
+                        })
+                      }
                     >
-                      <option value="user_profiles">User Profiles</option>
-                      <option value="makeup_artists">Makeup Artists</option>
+                      <option value="">Select table</option>
+                      {tables.map((t) => (
+                        <option key={t.table_name} value={t.table_name}>
+                          {t.table_name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Field Name</label>
-                    <input
-                      type="text"
-                      value={binding.field}
-                      onChange={(e) => updateBinding(index, { field: e.target.value })}
-                      className="w-full border rounded p-1.5 text-sm"
-                      placeholder="e.g., full_name, email"
-                    />
-                  </div>
+                  {/* Field */}
+                  {binding.source && (
+                    <div>
+                      <label className="block mb-1">Field</label>
+                      <select
+                        className="border rounded p-1 mt-1 w-full"
+                        value={binding.field}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                          updateBinding(index, {
+                            ...binding,
+                            field: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Select field</option>
+                        {tables
+                          .find((t) => t.table_name === binding.source)
+                          ?.columns.map((col) => (
+                            <option key={col} value={col}>
+                              {col}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
 
+                  {/* Fallback */}
                   <div>
-                    <label className="block text-xs font-medium mb-1">Fallback Value</label>
+                    <label className="block mb-1">Fallback</label>
                     <input
                       type="text"
+                      className="border rounded p-1 w-full"
                       value={binding.fallback || ""}
-                      onChange={(e) => updateBinding(index, { fallback: e.target.value })}
-                      className="w-full border rounded p-1.5 text-sm"
-                      placeholder="Default if data missing"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        updateBinding(index, {
+                          ...binding,
+                          fallback: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Transform</label>
-                    <select
-                      value={binding.transform || ""}
-                      onChange={(e) => updateBinding(index, { 
-                        transform: e.target.value as "uppercase" | "lowercase" | "capitalize" | undefined 
-                      })}
-                      className="w-full border rounded p-1.5 text-sm"
-                    >
-                      <option value="">None</option>
-                      <option value="uppercase">UPPERCASE</option>
-                      <option value="lowercase">lowercase</option>
-                      <option value="capitalize">Capitalize</option>
-                    </select>
-                  </div>
-
-                  <div className="pt-2 border-t border-gray-200">
-                    <p className="text-xs text-gray-600">
-                      Preview: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
-                        {`{{${binding.source}.${binding.field || '?'}}}`}
-                      </code>
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => removeBinding(index)}
+                    className="text-red-600 text-sm mt-2"
+                  >
+                    Remove Binding
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+              )
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </aside>
   );
 };
+
+export default RightSidebar;

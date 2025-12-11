@@ -1,3 +1,4 @@
+// modules\template_generation\admin\templatesGrid.tsx
 "use client";
 
 import { useEffect, useState } from "react";

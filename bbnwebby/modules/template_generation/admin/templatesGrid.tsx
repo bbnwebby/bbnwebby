@@ -77,19 +77,19 @@ export default function TemplateGrid() {
         className="w-full px-3 py-2 border rounded-md"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {filteredTemplates.map((tpl) => (
           <div
             key={tpl.id}
             className="border rounded-lg shadow-sm bg-white p-3 flex flex-col"
           >
-            <div className="relative w-full h-40 bg-gray-100 rounded overflow-hidden">
+            <div className="relative w-full h-80 bg-gray-100 rounded overflow-hidden">
               {tpl.background_img_url ? (
                 <Image
                   src={tpl.background_img_url}
                   alt={tpl.name}
                   fill
-                  style={{ objectFit: "cover" }}
+                  style={{ objectFit: "contain" }}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">

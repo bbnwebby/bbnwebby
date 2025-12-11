@@ -243,14 +243,27 @@ const saveTemplate = async (): Promise<void> => {
 
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-[88vh] flex flex-col">
       <div className="flex-1 flex overflow-hidden">
+        <div>
+          {/* Save Button */}
+          <div className="p-4 bg-gray-50 flex justify-center">
+            <button
+              onClick={saveTemplate}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Save Template
+            </button>
+          </div>
+
+        
         <LeftSidebar
           elements={elements}
           setElements={setElements}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
         />
+        </div>
 
         <ZoomableCanvas
           elements={elements}
@@ -275,15 +288,7 @@ const saveTemplate = async (): Promise<void> => {
         />
       </div>
 
-      {/* Save Button */}
-      <div className="p-4 bg-gray-50 flex justify-end">
-        <button
-          onClick={saveTemplate}
-          className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-        >
-          Save Template
-        </button>
-      </div>
+
     </div>
   );
 }

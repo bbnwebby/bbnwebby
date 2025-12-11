@@ -60,22 +60,7 @@ function TemplatesTabContent() {
 
 
     return (
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleBackToGrid}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
-            >
-              ← Back
-            </button>
-            <h2 className="text-lg font-semibold">
-              {mode === "create" ? "Create New Template" : "Edit Template"}
-            </h2>
-          </div>
-
-        </div>
+      <div className="max-100vh">
 
         {/* Editor */}
         <div className="bg-white rounded-lg shadow overflow-hidden">

@@ -94,3 +94,40 @@ export interface EditorState {
 }
 
 
+
+
+/**
+ * Represents a registered user profile in the system.
+ */
+export interface UserProfile {
+  id: string; // Unique identifier (UUID)
+  auth_user_id: string; // FK to Supabase auth.users.id
+  full_name: string; // User's full name
+  whatsapp_number?: string | null; // Optional WhatsApp contact
+  profile_photo_url?: string | null; // Profile image URL
+  location_url?: string | null; // Google Maps or custom location link
+  city?: string | null; // City name
+  created_at?: string | null; // Record creation timestamp
+  updated_at?: string | null; // Record last update timestamp
+}
+
+
+/**
+ * Represents a makeup artist user.
+ */
+export interface MakeupArtist {
+  id: string; // Unique identifier (UUID)
+  user_profile_id: string; // FK to user_profiles.id
+  organisation?: string | null; // Organization or brand name
+  designation?: string | null; // Role or title
+  instagram_handle?: string | null; // Instagram username
+  username: string; // Display username (unique within app)
+  status?: "pending" | "approved" | "rejected" | null; // Artist status (enum)
+  portfolio_pdf_url?: string | null; // PDF portfolio link
+  logo_url?: string | null
+  idcard_url?: string | null
+  created_at?: string | null; // Record creation timestamp
+  updated_at?: string | null; // Record last update timestamp
+}
+
+

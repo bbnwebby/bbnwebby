@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import {
   Menu,
   X,
@@ -10,10 +11,10 @@ import {
   LogIn,
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/components/auth/AuthProvider"; // ✅ Full access to user + profile
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const Navbar: React.FC = () => {
-  const { user, profile, logout, loading } = useAuth(); // ✅ include profile
+  const { user, profile, logout, loading } = useAuth();
   const [mounted, setMounted] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -46,17 +47,33 @@ const Navbar: React.FC = () => {
   return (
     <nav
       className={`fixed top-0 w-full z-50 border-b transition-all duration-500 font-sans ${
-      scrolled
-        ? "bg-[rgba(255,192,203,0.85)] backdrop-blur-xl border-[rgba(255,107,157,0.2)] text-black"
-        : "bg-transparent border-transparent text-pink-700"
+        scrolled
+          ? "bg-[rgba(255,192,203,0.85)] backdrop-blur-xl border-[rgba(255,107,157,0.2)] text-black"
+          : "bg-transparent border-transparent text-pink-700"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div></div>
 
-          {/* Logo */}
-          <div className="text-2xl px-10 font-semibold tracking-wide">BBN</div>
+          
+{/* Logo */}
+<div className="px-6 flex items-center h-16 overflow-hidden">
+  <Link href="/" className="relative h-10 w-36">
+    {/* 
+      h-10 ensures it fits comfortably inside navbar (h-16)
+      w-36 keeps a clean proportion
+    */}
+    <Image
+      src="/images/logo.jpeg"
+      alt="Beyond Beauty Network Logo"
+      fill
+      priority
+      className="object-contain"
+    />
+  </Link>
+</div>
+
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center">
@@ -109,7 +126,6 @@ const Navbar: React.FC = () => {
               }`}
             >
               <ul className="p-4 space-y-2 text-sm text-gray-800">
-                {/* ✅ Show logged-in user info */}
                 {!loading && user ? (
                   <>
                     <li className="text-gray-700 font-semibold text-[14px] border-b border-gray-300/30 pb-2 mb-2 truncate">
@@ -125,9 +141,6 @@ const Navbar: React.FC = () => {
                       </Link>
                     </li>
                     <li>
-
-                    </li>
-                    <li>
                       <button
                         onClick={() => {
                           logout();
@@ -140,18 +153,15 @@ const Navbar: React.FC = () => {
                     </li>
                   </>
                 ) : (
-                  <>
-                    {/* ✅ Show Login / Signup only if user not logged in */}
-                    <li>
-                      <Link
-                        href="/login"
-                        onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-pink-100/60 transition-all duration-300"
-                      >
-                        <LogIn className="w-4 h-4" /> Login / Sign Up
-                      </Link>
-                    </li>
-                  </>
+                  <li>
+                    <Link
+                      href="/login"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-pink-100/60 transition-all duration-300"
+                    >
+                      <LogIn className="w-4 h-4" /> Login / Sign Up
+                    </Link>
+                  </li>
                 )}
               </ul>
             </div>
@@ -180,7 +190,6 @@ const Navbar: React.FC = () => {
             : "opacity-0 -translate-y-8 pointer-events-none"
         }`}
       >
-        {/* Glassmorphic BG */}
         <div
           className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
             isMenuOpen
@@ -189,7 +198,6 @@ const Navbar: React.FC = () => {
           } border-t border-[rgba(255,255,255,0.25)] shadow-2xl`}
         ></div>
 
-        {/* Menu Links */}
         <div className="relative flex flex-col justify-center items-center h-full px-8 space-y-14 text-center">
           {[
             { href: "#home", label: "Home" },
@@ -214,12 +222,10 @@ const Navbar: React.FC = () => {
             </Link>
           ))}
 
-          {/* Book Now */}
           <button className="mt-16 px-10 py-3 text-lg font-medium rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-lg hover:shadow-pink-200/70 hover:scale-105 transition-all duration-500 ease-out">
             Book Now
           </button>
 
-          {/* Close Button */}
           <button
             onClick={() => setIsMenuOpen(false)}
             className="absolute bottom-10 flex items-center justify-center w-12 h-12 rounded-full bg-[rgba(255,255,255,0.3)] backdrop-blur-md hover:bg-[rgba(255,255,255,0.5)] transition-all duration-700 shadow-md"

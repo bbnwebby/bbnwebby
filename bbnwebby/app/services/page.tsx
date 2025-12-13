@@ -266,8 +266,8 @@ const ServicesPage: FC = () => {
 
                   {/* CTA */}
                   <a
-                    href={`https://wa.me/919999999999?text=${encodeURIComponent(
-                      `I would like ${selectedService.name}${selectedService.id ? ` (${selectedService.id})` : ''}`
+                    href={`https://wa.me/917995514547?text=${encodeURIComponent(
+                      `I would like ${selectedService.name}${selectedService.id ? ` (${selectedService.id}) service` : ''}`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"

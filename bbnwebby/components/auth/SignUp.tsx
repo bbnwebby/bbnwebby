@@ -27,6 +27,7 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
   const [organisation, setOrganisation] = useState<string>('beyond beauty network');
   const [designation, setDesignation] = useState<string>('webdev');
   const [instagramHandle, setInstagramHandle] = useState<string>('insta weeb');
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // ==================== Files ====================
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
@@ -539,95 +540,154 @@ async function generateAndUploadIdCard(
 
 
   // ==================== UI ====================
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 p-6">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg p-10 border border-gray-200">
-        <h2 className="text-3xl font-bold text-center mb-2 text-gray-900">
+return (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-200/40 via-purple-200/30 to-blue-200/30">
+    {/* Glass container */}
+    <div className="w-full max-w-6xl bg-white/80 backdrop-blur-xl border border-pink-200 rounded-3xl shadow-2xl p-10">
+      {/* Header */}
+      <div className="text-center mb-10">
+        <p className="text-xs uppercase tracking-widest text-pink-500 mb-2">
+          Join Beyond Beauty Network
+        </p>
+        <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-2">
           Makeup Artist Registration
         </h2>
-        <p className="text-center text-gray-500 mb-6">
+        <p className="text-gray-600">
           Join our creative community and showcase your artistry.
         </p>
-
-        {message && (
-          <div
-            className={`mb-6 p-4 text-sm font-medium rounded-lg ${
-              message.type === 'success'
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
-          {/* LEFT */}
-          <div className="space-y-4">
-            <InputField label="Email" required value={email} onChange={setEmail} type="email" />
-            <InputField label="Password" required value={password} onChange={setPassword} type="password" />
-            <InputField label="Full Name" required value={fullName} onChange={setFullName} />
-            <InputField label="WhatsApp Number" required value={whatsappNumber} onChange={setWhatsappNumber} />
-            <InputField label="City" required value={city} onChange={setCity} />
-
-            <div>
-              <label className="block font-semibold mb-1">Profile Image</label>
-              <input required type="file" accept="image/*" onChange={(e) => handleProfileChange(e.target.files)} />
-              {profilePreview && (
-                <img
-                  src={profilePreview}
-                  alt="Profile Preview"
-                  className="mt-2 rounded-lg w-32 h-32 object-cover border"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT */}
-          <div className="space-y-4">
-            <InputField required label="Organisation" value={organisation} onChange={setOrganisation} />
-            <InputField required label="Designation" value={designation} onChange={setDesignation} />
-            <InputField required label="Instagram Handle" value={instagramHandle} onChange={setInstagramHandle} />
-
-            <div>
-              <label className="block font-semibold mb-1">Logo</label>
-              <input
-                required
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  setLogoFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-1">Portfolio PDF</label>
-              <input
-                required
-                type="file"
-                accept="application/pdf"
-                onChange={(e) =>
-                  setPortfolioPdfFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)
-                }
-              />
-            </div>
-          </div>
-
-          {/* SUBMIT */}
-          <div className="md:col-span-2 text-center mt-8">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition disabled:opacity-60"
-            >
-              {loading ? 'Registering...' : 'Register'}
-            </button>
-          </div>
-        </form>
       </div>
+
+      {/* Status message */}
+      {message && (
+        <div
+          className={`mb-8 px-5 py-4 text-sm rounded-xl border ${
+            message.type === "success"
+              ? "bg-green-50 text-green-700 border-green-200"
+              : "bg-red-50 text-red-700 border-red-200"
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-8">
+        {/* LEFT COLUMN */}
+        <div className="space-y-5">
+          <InputField label="Email" required value={email} onChange={setEmail} type="email" />
+          <InputField label="Password" required value={password} onChange={setPassword} type="password" />
+          <InputField label="Full Name" required value={fullName} onChange={setFullName} />
+          <InputField label="WhatsApp Number" required value={whatsappNumber} onChange={setWhatsappNumber} />
+          <InputField label="City" required value={city} onChange={setCity} />
+
+          {/* Profile image upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-800 mb-1">
+              Profile Image
+            </label>
+            <input
+              required
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleProfileChange(e.target.files)}
+              className="block w-full text-sm text-gray-600
+                         file:mr-4 file:rounded-full file:border-0
+                         file:bg-pink-100 file:px-5 file:py-2
+                         file:text-pink-700 hover:file:bg-pink-200"
+            />
+
+            {/* Profile preview */}
+            {profilePreview && (
+              <img
+                src={profilePreview}
+                alt="Profile Preview"
+                className="mt-4 w-32 h-32 rounded-2xl object-cover border border-pink-200 shadow-sm"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="space-y-5">
+          <InputField label="Organisation" required value={organisation} onChange={setOrganisation} />
+          <InputField label="Designation" required value={designation} onChange={setDesignation} />
+          <InputField label="Instagram Handle" required value={instagramHandle} onChange={setInstagramHandle} />
+
+          {/* Logo upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-800 mb-1">
+              Brand Logo
+            </label>
+            <input
+              required
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file: File | null =
+                  e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                setLogoFile(file);
+
+                if (file) {
+                  const reader: FileReader = new FileReader();
+                  reader.onload = () => setLogoPreview(reader.result as string);
+                  reader.readAsDataURL(file);
+                } else {
+                  setLogoPreview(null);
+                }
+              }}
+              className="block w-full text-sm text-gray-600
+                         file:mr-4 file:rounded-full file:border-0
+                         file:bg-pink-100 file:px-5 file:py-2
+                         file:text-pink-700 hover:file:bg-pink-200"
+            />
+
+            {/* Logo preview */}
+            {logoPreview && (
+              <img
+                src={logoPreview}
+                alt="Logo Preview"
+                className="mt-4 w-32 h-32 rounded-2xl object-contain bg-white border border-pink-200 shadow-sm p-3"
+              />
+            )}
+          </div>
+
+          {/* Portfolio PDF */}
+          <div>
+            <label className="block text-sm font-medium text-gray-800 mb-1">
+              Portfolio (PDF)
+            </label>
+            <input
+              required
+              type="file"
+              accept="application/pdf"
+              onChange={(e) =>
+                setPortfolioPdfFile(
+                  e.target.files && e.target.files[0] ? e.target.files[0] : null
+                )
+              }
+              className="block w-full text-sm text-gray-600"
+            />
+          </div>
+        </div>
+
+        {/* SUBMIT */}
+        <div className="md:col-span-2 text-center mt-10">
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex items-center justify-center h-12 px-10 rounded-full
+                       bg-pink-400 hover:bg-pink-500 text-white font-medium
+                       tracking-wide transition-transform duration-300
+                       hover:scale-105 disabled:opacity-60"
+          >
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </div>
+      </form>
     </div>
-  );
+  </div>
+);
+
 }
 
 /** Small reusable input component for consistent styling */

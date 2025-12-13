@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import FeaturedArtists from "@/components/FeaturedArticles";
 import ServicesSection from "@/components/HowItWorks";
+import Contact from "@/components/Contact";
 
 /**
  * Home Page Component
@@ -37,7 +38,7 @@ const Home: React.FC = () => {
       {/* 💄 Join Section */}
       <JoinSection />
 
-
+      <Contact/>
     </main>
   );
 };

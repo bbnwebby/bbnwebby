@@ -2,7 +2,7 @@
 
 import React from "react";
 import styles from "./HeroSection.module.css";
-
+import Link from "next/link";
 /**
  * HeroSection component
  * Displays a luxurious hero section with animated ornaments,
@@ -24,7 +24,9 @@ const HeroSection: React.FC = () => {
       <div className={styles.heroContent}>
         <h1 className={styles.heroSubtitle}>Beyond Beauty Network</h1>
         <p>Discover Your Perfect<br />Makeup Artist</p>
-        <button className={styles.ctaBtn}>Find an Artist</button>
+        <Link  href="/services">
+           <button className={styles.ctaBtn}>Find an Service</button>
+        </Link>
       </div>
     </section>
   );

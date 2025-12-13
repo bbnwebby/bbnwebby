@@ -303,7 +303,9 @@ export default function TemplateEditor(): JSX.Element {
           loadingSchema={loadingSchema}
           schemaError={schemaError}
           templateName={templateName}               
-          setTemplateName={setTemplateName}   
+          setTemplateName={setTemplateName}
+          templateType={templateType}
+          setTemplateType={setTemplateType}
         />
       </div>
     </div>

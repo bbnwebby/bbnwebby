@@ -15,6 +15,8 @@ interface RightSidebarProps {
   schemaError: string | null;
   templateName: string; // template name field
   setTemplateName: React.Dispatch<React.SetStateAction<string>>; // template name setter
+  templateType: string;
+  setTemplateType: React.Dispatch<React.SetStateAction<"certificate" | "id_card">>;
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -29,6 +31,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   schemaError,
   templateName,
   setTemplateName,
+  templateType,
+  setTemplateType
 }) => {
   const selectedElement =
     elements.find((el) => el.id === selectedId) || null;
@@ -72,6 +76,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
     );
     updateElement("binding_config", updated);
   };
+  
 
   return (
     <aside className="w-80 border-l bg-white p-4 overflow-y-auto">
@@ -102,6 +107,23 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           />
         </div>
       )}
+
+      {!selectedElement && (
+        <div className="mb-4">
+          <label className="block mb-1">Template Type</label>
+          <select
+            className="border rounded p-1 w-full"
+            value={templateType}
+            onChange={(e) =>
+              setTemplateType(e.target.value as "certificate" | "id_card")
+            }
+          >
+            <option value="certificate">Certificate</option>
+            <option value="id_card">ID Card</option>
+          </select>
+        </div>
+      )}
+
 
       {!selectedElement && (
         <p className="text-sm text-gray-500">

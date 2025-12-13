@@ -14,6 +14,8 @@ const geistMono = Geist_Mono({
 
 import { Poppins, Playfair_Display } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 // Import and configure both fonts
 const poppins = Poppins({
@@ -42,11 +44,16 @@ export default function RootLayout({
     <html lang="en"
      className={`${poppins.variable} ${playfair.variable}`}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`} 
       >
+      <div className=" bg-gradient-to-br from-pink-200/40 via-purple-200/30 to-blue-200/30 ">    
+      <Navbar />
+      <div className="h-20 "></div>
         <AuthProvider>
         {children}
         </AuthProvider>
+      <Footer />
+      </div>  
       </body>
     </html>
   );

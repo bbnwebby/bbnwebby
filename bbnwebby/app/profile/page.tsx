@@ -6,20 +6,32 @@ import { useAuth } from '@/components/auth/AuthProvider'
 
 // ========================================================
 // 🧾 Profile Page
-// Displays user profile + makeup artist details
-// Styled to match BBN glass / luxury aesthetic
+// Progressive rendering with safe null checks
 // ========================================================
 const ProfilePage: React.FC = () => {
   const { profile, makeupArtist, loading } = useAuth()
 
-  if (loading) {
+  // --------------------------------------------------------
+  // Skeleton loader while auth/profile is resolving
+  // --------------------------------------------------------
+  // --------------------------------------------------------
+  // Fast path: render background + skeleton sections
+  // AuthProvider may already have partial data
+  // --------------------------------------------------------
+  if (loading && !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-200/40 via-purple-200/30 to-blue-200/30">
-        <p className="text-gray-700 font-medium">Loading profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-pink-300/70 via-purple-300/50 to-blue-300/50 px-4 py-12">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="h-40 rounded-3xl bg-white/90 border border-pink-300 shadow-lg animate-pulse" />
+          <div className="h-56 rounded-3xl bg-white/90 border border-pink-300 shadow-lg animate-pulse" />
+        </div>
       </div>
     )
   }
 
+  // --------------------------------------------------------
+  // No profile (should rarely happen)
+  // --------------------------------------------------------
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -32,7 +44,7 @@ const ProfilePage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-pink-200/40 via-purple-200/30 to-blue-200/30 px-4 py-12">
       <div className="max-w-6xl mx-auto space-y-10">
         {/* ============================= */}
-        {/* User Profile Card */}
+        {/* User Profile */}
         {/* ============================= */}
         <div className="bg-white/80 backdrop-blur-xl border border-pink-200 rounded-3xl shadow-xl p-8">
           <div className="flex flex-col md:flex-row gap-8">
@@ -44,7 +56,7 @@ const ProfilePage: React.FC = () => {
                   alt={profile.full_name}
                   width={160}
                   height={160}
-                  className="rounded-2xl object-cover border border-pink-200"
+                  className="rounded-2xl object-cover border border-pink-200 transition-opacity duration-500"
                 />
               </div>
             )}
@@ -63,14 +75,13 @@ const ProfilePage: React.FC = () => {
                 {profile.whatsapp_number && (
                   <div><strong>WhatsApp:</strong> {profile.whatsapp_number}</div>
                 )}
-
               </div>
             </div>
           </div>
         </div>
 
         {/* ============================= */}
-        {/* Makeup Artist Card */}
+        {/* Makeup Artist (lazy section) */}
         {/* ============================= */}
         {makeupArtist && (
           <div className="bg-white/80 backdrop-blur-xl border border-pink-200 rounded-3xl shadow-xl p-8">
@@ -108,7 +119,6 @@ const ProfilePage: React.FC = () => {
 
               {/* Assets */}
               <div className="space-y-5">
-                {/* Logo */}
                 {makeupArtist.logo_url && (
                   <div>
                     <p className="text-sm font-medium text-gray-800 mb-2">Brand Logo</p>
@@ -117,12 +127,11 @@ const ProfilePage: React.FC = () => {
                       alt="Brand Logo"
                       width={160}
                       height={160}
-                      className="rounded-2xl object-contain bg-white border border-pink-200 p-4"
+                      className="rounded-2xl object-contain bg-white border border-pink-200 p-4 transition-opacity duration-500"
                     />
                   </div>
                 )}
 
-                {/* ID Card */}
                 {makeupArtist.idcard_url && (
                   <div>
                     <p className="text-sm font-medium text-gray-800 mb-2">ID Card</p>
@@ -131,12 +140,11 @@ const ProfilePage: React.FC = () => {
                       alt="ID Card"
                       width={240}
                       height={160}
-                      className="rounded-2xl object-cover border border-pink-200"
+                      className="rounded-2xl object-cover border border-pink-200 transition-opacity duration-500"
                     />
                   </div>
                 )}
 
-                {/* Portfolio */}
                 {makeupArtist.portfolio_pdf_url && (
                   <a
                     href={makeupArtist.portfolio_pdf_url}

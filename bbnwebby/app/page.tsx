@@ -17,8 +17,7 @@ import ServicesSection from "@/components/HowItWorks";
 const Home: React.FC = () => {
   return (
     <main className="overflow-x-hidden">
-      {/* 🔝 Navbar */}
-      <Navbar />
+
 
       {/* 🎥 Hero Section */}
       <Hero />
@@ -38,8 +37,7 @@ const Home: React.FC = () => {
       {/* 💄 Join Section */}
       <JoinSection />
 
-      {/* 🦶 Footer */}
-      <Footer />
+
     </main>
   );
 };

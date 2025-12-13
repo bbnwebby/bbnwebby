@@ -665,7 +665,10 @@ return (
                   e.target.files && e.target.files[0] ? e.target.files[0] : null
                 )
               }
-              className="block w-full text-sm text-gray-600"
+              className="lock w-full text-sm text-gray-600
+                         file:mr-4 file:rounded-full file:border-0
+                         file:bg-pink-100 file:px-5 file:py-2
+                         file:text-pink-700 hover:file:bg-pink-200"
             />
           </div>
         </div>

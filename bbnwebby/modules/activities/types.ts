@@ -1,4 +1,4 @@
-// types.ts
+// // modules/activities/admin/types.ts
 
 export interface UserActivity {
   id: string; // uuid
@@ -22,4 +22,18 @@ export interface UserProfileMinimal {
   full_name: string;
   profession: string | null;
   profile_photo_url: string | null;
+}
+
+
+
+
+// For create/edit form
+export interface UserActivityFormData {
+  user_id: string;
+  activity_type: string;
+  activity_name: string;
+  activity_description: string;
+  cover_image_url: string;
+  start_time: string;
+  completion_time: string;
 }

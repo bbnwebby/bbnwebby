@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import TemplatesTab from "@/modules/template_generation/admin/templatesTab";
+import ActivitiesTab from "@/modules/activities/admin/ActivitiesTab";
 
 function AdminContent() {
   const searchParams = useSearchParams();
@@ -31,43 +32,44 @@ function AdminContent() {
               Templates
             </button>
             <button
-              onClick={() => handleTabChange("users")}
+              onClick={() => handleTabChange("activities")}
               className={`py-4 px-1 border-b-2 h-10  font-medium text-sm ${
-                currentTab === "users"
+                currentTab === "activities"
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Users
+              Activities
             </button>
             <button
-              onClick={() => handleTabChange("artists")}
+              onClick={() => handleTabChange("users")}
               className={`py-4 px-1 border-b-2 h-10  font-medium text-sm ${
                 currentTab === "artists"
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Artists
+              users
             </button>
           </nav>
         </div>
       </div>
 
       {/* Tab Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {currentTab === "templates" && <TemplatesTab />}
-        {currentTab === "users" && (
-          <div className="text-center py-12 text-gray-500">
-            Users tab coming soon...
-          </div>
-        )}
-        {currentTab === "artists" && (
-          <div className="text-center py-12 text-gray-500">
-            Artists tab coming soon...
-          </div>
-        )}
-      </div>
+<div className="max-w-7xl mx-auto px-4 py-8">
+  {currentTab === "templates" && <TemplatesTab />}
+  {currentTab === "activities" && <ActivitiesTab />}
+  {currentTab === "users" && (
+    <div className="text-center py-12 text-gray-500">
+      Users tab coming soon...
+    </div>
+  )}
+  {currentTab === "artists" && (
+    <div className="text-center py-12 text-gray-500">
+      Artists tab coming soon...
+    </div>
+  )}
+</div>
     </div>
   );
 }

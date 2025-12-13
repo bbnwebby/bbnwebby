@@ -441,7 +441,7 @@ async function generateAndUploadIdCard(
     // ---------------------------------------------------------------------------
     // Load template & profile image
     // ---------------------------------------------------------------------------
-    const templateId: string = "e4b514f3-28df-4bde-a0fe-0ca9b47c9250";
+    const templateId: string = "fc6f575e-d4a2-4a7c-8206-78b7c18f755b"  //"e4b514f3-28df-4bde-a0fe-0ca9b47c9250";
     const bgImage: HTMLImageElement = await loadImage("/images/templates/base_id_bg.jpg");
 
     const profileImageHtml: HTMLImageElement | null =
@@ -459,8 +459,8 @@ async function generateAndUploadIdCard(
       "id_card",
       templateId,
       artistId,
-      bgImage,
-      profileImageHtml
+      //bgImage, // this one
+      //profileImageHtml //this is what the user submited. when this is givenn without the bgImage it is mistaken for the bgImage
     );
 
     logDebug.stopTimer("id_card_generation", { file: FILE, fn: FUNC });

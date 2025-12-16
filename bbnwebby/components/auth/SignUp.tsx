@@ -19,6 +19,7 @@ interface Message {
 
 export default function MakeupArtistSignUpForm(): JSX.Element {
   // ==================== Form fields ====================
+  /*
   const [email, setEmail] = useState<string>('bbnwebby@gmail.com');
   const [password, setPassword] = useState<string>('password');
   const [fullName, setFullName] = useState<string>('joe k');
@@ -27,6 +28,16 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
   const [organisation, setOrganisation] = useState<string>('beyond beauty network');
   const [designation, setDesignation] = useState<string>('webdev');
   const [instagramHandle, setInstagramHandle] = useState<string>('insta weeb');
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  */
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [fullName, setFullName] = useState<string>('');
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
+  const [city, setCity] = useState<string>('hyderabad');
+  const [organisation, setOrganisation] = useState<string>('');
+  const [designation, setDesignation] = useState<string>('');
+  const [instagramHandle, setInstagramHandle] = useState<string>('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // ==================== Files ====================

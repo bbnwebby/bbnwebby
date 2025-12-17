@@ -1,0 +1,21 @@
+[build]
+  # Use standard Next.js build (not Turbopack)
+  command = "next build"
+  publish = ".next"
+
+[build.environment]
+  # ✅ Disable Turbopack — avoids wasm/swc binding errors on Netlify
+  NEXT_USE_TURBOPACK = "false"
+
+  # ✅ Specify Node version (Next.js 15 requires Node 18+; 20 is ideal)
+  NODE_VERSION = "20"
+
+  # ✅ Match your Next.js target version
+  NEXT_PRIVATE_TARGET_VERSION = "15.5.0"
+
+  # Optional but useful for performance
+  NPM_FLAGS = "--prefer-offline --no-audit"
+
+[[plugins]]
+  # Netlify Next.js plugin handles SSR, image optimization, etc.
+  package = "@netlify/plugin-nextjs"

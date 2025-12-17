@@ -2,7 +2,6 @@
 "use client";
 
 import React from "react";
-import { v4 as uuid } from "uuid";
 import * as Types from "../types";
 
 
@@ -21,7 +20,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 }) => {
   const addText = () => {
     const newEl: Types.EditorElement = {
-      id: uuid(),
+      id:  crypto.randomUUID(),
       type: "text",
       text: "New Text",
       x: 50,

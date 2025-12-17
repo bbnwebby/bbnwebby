@@ -44,7 +44,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
   const addImage = () => {
     const newEl: Types.EditorElement = {
-      id: uuid(),
+      id: crypto.randomUUID(),
       type: "image",
       image_url: "https://via.placeholder.com/200",
       x: 100,

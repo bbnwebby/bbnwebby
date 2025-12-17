@@ -2,6 +2,7 @@
 
 import React, {
   FC,
+  Suspense,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -162,7 +163,7 @@ const ServiceCard: FC<{
  * PAGE
  * =====================================================
  */
-const ServicesPage: FC = () => {
+const ServicesClient: FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -481,4 +482,12 @@ useEffect(() => {
   );
 };
 
-export default ServicesPage;
+
+
+export default function ServicesPage() {
+  return (
+    <Suspense fallback={<div className="pt-32 text-center">Loading services…</div>}>
+      <ServicesClient />
+    </Suspense>
+  );
+}

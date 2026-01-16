@@ -51,6 +51,130 @@ export default function MakeupArtistSignUpForm(): JSX.Element {
   const [message, setMessage] = useState<Message | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+
+  // ui with no real backend :
+/**
+ * =====================================================
+ * ADDRESS STATES
+ * =====================================================
+ */
+const [address, setAddress] = useState<string>("");
+const [cityState, setCityState] = useState<string>("");
+const [pincode, setPincode] = useState<string>("");
+const [mapLink, setMapLink] = useState<string>("");
+
+/**
+ * =====================================================
+ * CATEGORY STATES
+ * =====================================================
+ */
+const [selectedCategory, setSelectedCategory] = useState<string>("");
+const [customCategory, setCustomCategory] = useState<string>("");
+
+/**
+ * =====================================================
+ * SERVICES STATES
+ * =====================================================
+ */
+const [selectedServices, setSelectedServices] = useState<string[]>([]);
+const [customService, setCustomService] = useState<string>("");
+
+/**
+ * =====================================================
+ * BRANDS STATES
+ * =====================================================
+ */
+const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+
+/**
+ * =====================================================
+ * REFERRAL STATES
+ * =====================================================
+ */
+const [refName, setRefName] = useState<string>("");
+const [refContact, setRefContact] = useState<string>("");
+  // =========================
+// CATEGORY OPTIONS
+// =========================
+const categoryOptions: string[] = [
+  "Academy",
+  "Association",
+  "Blogger",
+  "Clinic",
+  "Distributor",
+  "E-commerce",
+  "Freelancer / Mobile Services",
+  "Importer",
+  "Manufacturer",
+  "Parlour",
+  "Retailer",
+  "Salon",
+  "Spa",
+  "Wholesaler",
+  "Other",
+];
+
+// =========================
+// SERVICES
+// =========================
+const serviceOptions: string[] = [
+  "Aromatherapy",
+  "Aesthetics & advanced skincare",
+  "Facials",
+  "Haircare",
+  "Haircolour",
+  "Micro-blading",
+  "Lashes & Brows",
+  "Makeup",
+  "Manicure & Pedicure",
+  "Mens grooming",
+  "Nailcare",
+  "Skincare",
+  "Spa services",
+  "Scalp Care",
+  "Others",
+];
+
+// =========================
+// BRAND GROUPS
+// =========================
+const brandGroups: Record<string, string[]> = {
+  Haircare: [
+    "3TENX",
+    "Biotop",
+    "Ikonic Professional",
+    "Kerastase",
+    "Milkshake",
+    "Moroccan Oil",
+    "Nashi",
+    "Olaplex",
+    "Sebastian",
+    "SH-RD",
+    "VGR Professional",
+    "Wella",
+  ],
+  Skincare: ["Janssen", "Skeyndor", "Skinora", "Sothys", "Thalgo"],
+  Nails: ["Biosculpture", "Bluesky", "OPI", "Shills Professional"],
+  Makeup: ["Kryolan Professional", "MakeUp Studio", "Others"],
+};
+const toggleService = (service: string): void => {
+  setSelectedServices((prev: string[]) =>
+    prev.includes(service)
+      ? prev.filter((s: string) => s !== service)
+      : [...prev, service]
+  );
+};
+
+const toggleBrand = (brand: string): void => {
+  setSelectedBrands((prev: string[]) =>
+    prev.includes(brand)
+      ? prev.filter((b: string) => b !== brand)
+      : [...prev, brand]
+  );
+};
+
+
+
   // ==================== File Handlers ====================
   const handleProfileChange = (files: FileList | null): void => {
     if (!files || files.length === 0) {
@@ -591,6 +715,81 @@ return (
           <InputField label="WhatsApp Number" required value={whatsappNumber} onChange={setWhatsappNumber} />
           <InputField label="City" required value={city} onChange={setCity} />
 
+{/* =========================
+   ADDRESS DETAILS
+========================= */}
+<div className="md:col-span-2 mt-6">
+  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    Address Details
+  </h3>
+
+  <div className="grid md:grid-cols-2 gap-6">
+    <InputField
+      label="Street Address"
+      required
+      value={address}
+      onChange={setAddress}
+    />
+
+    <InputField
+      label="City & State"
+      required
+      value={cityState}
+      onChange={setCityState}
+    />
+
+    <InputField
+      label="Pincode"
+      required
+      value={pincode}
+      onChange={setPincode}
+      type="number"
+    />
+
+  </div>
+</div>
+
+{/* =========================
+   BRANDS USED
+========================= */}
+<div className="md:col-span-2 mt-10">
+  <h3 className="text-lg font-semibold text-gray-900 mb-6">
+    Brands Used
+  </h3>
+
+  {Object.entries(brandGroups).map(
+    ([groupName, brands]: [string, string[]]) => (
+      <div key={groupName} className="mb-6">
+        <p className="text-sm font-medium text-gray-700 mb-3">
+          {groupName}
+        </p>
+
+        <div className="flex flex-wrap gap-3">
+          {brands.map((brand: string) => {
+            const active: boolean = selectedBrands.includes(brand);
+
+            return (
+              <button
+                key={brand}
+                type="button"
+                onClick={() => toggleBrand(brand)}
+                className={`px-4 py-2 rounded-full text-xs border transition
+                  ${
+                    active
+                      ? "bg-purple-400 text-white border-purple-400"
+                      : "border-gray-300 hover:border-purple-300"
+                  }`}
+              >
+                {brand}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    )
+  )}
+</div>
+
           {/* Profile image upload */}
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">
@@ -623,6 +822,95 @@ return (
           <InputField label="Organisation" required value={organisation} onChange={setOrganisation} />
           <InputField label="Designation" required value={designation} onChange={setDesignation} />
           <InputField label="Instagram Handle" required value={instagramHandle} onChange={setInstagramHandle} />
+
+
+
+{/* =========================
+   BUSINESS CATEGORY
+========================= */}
+<div className="md:col-span-2 mt-10">
+  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    Category
+  </h3>
+
+  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+    {categoryOptions.map((category: string) => (
+      <label
+        key={category}
+        className={`cursor-pointer rounded-xl border p-4 text-sm transition
+          ${
+            selectedCategory === category
+              ? "border-pink-400 bg-pink-50 text-pink-700"
+              : "border-gray-200 hover:border-pink-300"
+          }`}
+      >
+        <input
+          type="radio"
+          name="category"
+          value={category}
+          checked={selectedCategory === category}
+          onChange={() => setSelectedCategory(category)}
+          className="hidden"
+        />
+        {category}
+      </label>
+    ))}
+  </div>
+
+  {selectedCategory === "Other" && (
+    <div className="mt-4 max-w-md">
+      <InputField
+        label="Please specify"
+        value={customCategory}
+        onChange={setCustomCategory}
+      />
+    </div>
+  )}
+</div>
+{/* =========================
+   SERVICES OFFERED
+========================= */}
+<div className="md:col-span-2 mt-10">
+  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    Services Offered
+  </h3>
+
+  <div className="flex flex-wrap gap-3">
+    {serviceOptions.map((service: string) => {
+      const active: boolean = selectedServices.includes(service);
+
+      return (
+        <button
+          key={service}
+          type="button"
+          onClick={() => toggleService(service)}
+          className={`px-4 py-2 rounded-full text-sm border transition
+            ${
+              active
+                ? "bg-pink-400 text-white border-pink-400"
+                : "bg-white border-gray-300 hover:border-pink-300"
+            }`}
+        >
+          {service}
+        </button>
+      );
+    })}
+  </div>
+
+  {selectedServices.includes("Others") && (
+    <div className="mt-4 max-w-md">
+      <InputField
+        label="Other Services"
+        value={customService}
+        onChange={setCustomService}
+      />
+    </div>
+  )}
+</div>
+
+
+
+
 
           {/* Logo upload */}
           <div>

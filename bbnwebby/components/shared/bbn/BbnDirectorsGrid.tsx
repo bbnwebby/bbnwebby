@@ -127,7 +127,7 @@ export default function DirectorGridWithFilters() {
         }}
       />
 
-      <main className=" space-y-16">
+      <main className="mt-10 space-y-16">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {[...Array(10)].map((_, i) => (
@@ -156,7 +156,7 @@ export default function DirectorGridWithFilters() {
           </div>
         ) : (
           sortedRegions.map((region) => (
-            <section key={region} className="space-y-6">
+            <div key={region} className="space-y-6">
               {/* Region Header */}
               <h2 className="text-2xl font-semibold tracking-tight border-b border-gray-800 pb-2">
                 {region}
@@ -171,7 +171,7 @@ export default function DirectorGridWithFilters() {
                   />
                 ))}
               </div>
-            </section>
+            </div>
           ))
         )}
       </main>

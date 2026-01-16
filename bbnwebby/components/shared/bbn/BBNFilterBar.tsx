@@ -143,7 +143,7 @@ export default function BBNFilterBar({
     hierarchy.selection.selectedCity;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Search + Filter Button */}
       <div className="flex gap-2">
         <div className="relative flex-1">

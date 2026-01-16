@@ -23,6 +23,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
+  { href: "/bbn_directors", label: "BBN Directors" },
   { href: "/#artists", label: "Artists" },
   { href: "/#about", label: "About" },
   { href: "/#contact", label: "Contact" },
@@ -116,6 +117,7 @@ const Navbar: React.FC = () => {
                   Book Now
                 </Link>
               </li>
+              
             </ul>
           </div>
 
